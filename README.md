@@ -53,6 +53,10 @@
 - Portanto, o objetivo principal da utilização do KMP é maximizar a reutilização de código, delegando as eventuais
   implementações, que são específicas de cada plataforma, para o código nativo da mesma.
 
+| ![KMP Architecture](./docs/imgs/kmp-architecture.png) |
+|:-----------------------------------------------------:|
+|                  Arquitetura do KMP                   |
+
 ## Problema
 
 - Não existem bibliotecas de resiliência em Kotlin que sejam multiplataforma, comprometendo o desenvolvimento de
