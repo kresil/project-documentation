@@ -1,53 +1,23 @@
 \documentclass[a4paper,twoside,11pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[portuguese]{babel}
-\usepackage{graphicx}
-\usepackage{url}
-\usepackage{titlesec}
 
-% enables dots in section titles
-\titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{1em}{}
-
-% redefines margins
-\setlength{\textheight}{24.00cm}
-\setlength{\textwidth}{15.50cm}
-\setlength{\topmargin}{0.35cm}
-\setlength{\headheight}{0cm}
-\setlength{\headsep}{0cm}
-\setlength{\oddsidemargin}{0.25cm}
-\setlength{\evensidemargin}{0.25cm}
-
-% logo
-\begin{figure}
-    \begin{center}
-        \includegraphics{../docs/imgs/logo-isel}
-    \end{center}\label{fig:isel-logo}
-\end{figure}
-
-\title{\larger \textbf {Kresil - Kotlin Multiplatform Library as a Resilience Mechanism}}
-
-\author{
-    \begin{tabular}{c}
-        Francisco Engenheiro, n.º 49428, e-mail: a49428@alunos.isel.pt, tel.: 928051992\\
-    \end{tabular}}
-
-\date{
-    \begin{tabular}{ll}
-    {Orientadores:}
-        & Pedro Félix, e-mail:
-        pedro.felix@isel.pt \\
-    \end{tabular}\\
-    \vspace{5mm}
-    Março de 2023}
+% ----------------------------------------------------------------------
+% Define external packages, language, margins, fonts and new commands
+% ----------------------------------------------------------------------
+\input{preamble}
 
 \begin{document}
 
-    \maketitle
+    % Set plain page style (no headers, footer with centered page number)
+    \pagestyle{plain}
+
+    \input frontcover
+
+    %hello~\cite{fcc-distributed-systems} world
 
     \section{Contexto}\label{sec:contexto}
     \input{sections/01_context}
 
     \bibliographystyle{unsrt}
-    \bibliography{main}
+    \bibliography{bibliography}
 
 \end{document}

@@ -1,3 +1,35 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{1}
+
+\bibitem{fcc-distributed-systems}
+{FreeCodeCamp contributors}.
+\newblock A thorough introduction to distributed systems.
+\newblock
+  \url{https://www.freecodecamp.org/news/a-thorough-introduction-to-distributed-systems-3b91562c9b3c},
+  2024.
+\newblock [Online; accessed 5-March-2024].
+
+\bibitem{cap-theorem}
+{Wikipedia contributors}.
+\newblock Cap theorem.
+\newblock \url{https://en.wikipedia.org/wiki/CAP_theorem}, 2024.
+\newblock [Online; accessed 5-March-2024].
+
+\bibitem{netflix-hystrix}
+{Netflix contributors}.
+\newblock Hystrix: Latency and fault tolerance for distributed systems.
+\newblock \url{https://github.com/Netflix/Hystrix}, 2024.
+\newblock [Online; accessed 6-March-2024].
+
+\bibitem{resilience4j}
+{resilience4j contributors}.
+\newblock Resilience4j: User guide.
+\newblock \url{https://resilience4j.readme.io/docs/getting-started}, 2024.
+\newblock [Online; accessed 6-March-2024].
+
+\bibitem{polly-dotnet}
+{App-vNext contributors}.
+\newblock Polly: Resilience strategies.
+\newblock \url{https://github.com/App-vNext/Polly#resilience-strategies}, 2024.
+\newblock [Online; accessed 6-March-2024].
 
 \end{thebibliography}

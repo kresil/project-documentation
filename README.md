@@ -10,7 +10,9 @@
 2. [Problema](#problema)
 3. [Solução](#solução)
 4. [Demonstração](#demonstração)
-5. [Potenciais Riscos e Desafios](#potenciais-riscos-e-desafios)
+5. [Desafios e Potenciais Riscos](#desafios-e-potenciais-riscos)
+    - 5.1. [Desafios](#desafios)
+    - 5.2. [Riscos](#riscos)
 6. [Planeamento](#planeamento)
 7. [Notas Adicionais](#notas-adicionais)
 
@@ -85,8 +87,9 @@
 
 - A biblioteca será demonstrada através de demonstradores de código, que evidenciarão a sua utilização em diferentes
   plataformas, incluindo a integrada com a framework Ktor e que farão parte da bateria de testes da biblioteca.
+- Poderá eventualmente ser feita uma aplicação de exemplo com a framework Ktor, mas devido a possíveis limites de tempo não nos comprometemos com a mesma.
 
-## Potenciais Riscos e Desafios
+## Desafios e Potenciais Riscos
 
 ### Desafios
 
