@@ -32,4 +32,10 @@
 \newblock \url{https://github.com/App-vNext/Polly#resilience-strategies}, 2024.
 \newblock [Online; accessed 6-March-2024].
 
+\bibitem{kmp}
+{JetBrains contributors}.
+\newblock Kotlin multiplatform.
+\newblock \url{https://kotlinlang.org/docs/multiplatform.html}, 2024.
+\newblock [Online; accessed 7-March-2024].
+
 \end{thebibliography}

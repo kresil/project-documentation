@@ -1,4 +1,5 @@
 \documentclass[a4paper,twoside,11pt]{article}
+\usepackage{hyperref}
 
 % ----------------------------------------------------------------------
 % Define external packages, language, margins, fonts and new commands
@@ -7,12 +8,7 @@
 
 \begin{document}
 
-    % Set plain page style (no headers, footer with centered page number)
-    \pagestyle{plain}
-
-    \input frontcover
-
-    %hello~\cite{fcc-distributed-systems} world
+    \input{frontcover}
 
     \section{Contexto}\label{sec:contexto}
     \input{sections/01_context}
