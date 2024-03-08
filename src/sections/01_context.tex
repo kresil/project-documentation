@@ -12,15 +12,16 @@ disponibilidade e confiabilidade dos serviços que estes disponibilizam.
 
 \begin{table}[h]
     \centering
+    \caption{Exemplos de bibliotecas como mecanismos de resiliência.}
     \label{tab:resilience_libraries}
-    \begin{tabular}{|l|l|l|}
+    \begin{tabular}{|l|l|l|l|}
         \hline
-        \textbf{Biblioteca}                      & \textbf{Linguagem} & \textbf{Plataforma} \\ \hline
-        Netflix's Hystrix~\cite{netflix-hystrix} & Java               & JVM                 \\ \hline
-        Resilience4j~\cite{resilience4j}         & Java/Kotlin        & JVM                 \\ \hline
-        Polly~\cite{polly-dotnet}                & C\#                & .NET                \\ \hline
+        \textbf{Biblioteca} & \textbf{Linguagem} & \textbf{Plataforma} & \textbf{Ref}            \\ \hline
+        Netflix's Hystrix   & Java               & JVM                 & ~\cite{netflix-hystrix} \\ \hline
+        Resilience4j        & Java/Kotlin        & JVM                 & ~\cite{resilience4j}    \\ \hline
+        Polly               & C\#                & .NET                & ~\cite{polly-dotnet}    \\
+        \hline
     \end{tabular}
-    \caption{Exemplos de bibliotecas como mecanismos de resiliência}
 \end{table}
 
 Exemplos de mecanismos de resiliência disponibilizados por estas bibliotecas:
@@ -39,29 +40,26 @@ A biblioteca Polly~\cite{polly-dotnet} divide os mecanismos de resiliência que 
     \item \textbf{Resiliência Proativa}: Previne que as falhas aconteçam.
 \end{itemize}
 
-De referir que, as bibliotecas mencionadas anteriormente serão exploradas ao longo da fase de planeamento e desenvolvimento do projeto, de forma a que se possa tirar proveito do conhecimento inerente à sua implementação.
-Com especial atenção para a biblioteca \textit{Resilience4j}~\cite{resilience4j}, uma vez que apresenta um módulo de interoperabilidade com \textit{Kotlin} para a plataforma \textit{JVM}.
+\subsection{Kotlin Multiplatform}\label{subsec:kotlin-multiplatform}
 
-\subsection{Kotlin Multiplatform}
+A tecnologia \textit{Kotlin Multiplatform}~\cite{kmp} possibilita a partilha do código comum da aplicação entre diversas plataformas, tornando-o independente de qualquer plataforma específica.
 
-A tecnologia \textif{Kotlin Multiplatform}~\cite{kmp} possibilita a partilha do código nativo da aplicação entre diversas plataformas, tornando-o independente de qualquer plataforma específica.
-
-Para cada plataforma alvo, regularmente denominada como \textit{target}, poderão ter que existir implementações adicionais porque:
+Para cada plataforma alvo, regularmente denominada como \textit{target}, poderão ter que existir implementações exclusivas porque:
 
 \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
-    \item Um determinado \textit{target} não suporta diretamente o \textit{KMP}, como é o caso do \textit{Node.js}, e por isso é necessário criar um \textit{adapter} para a comunicação com o código comum (\textit{CommonMain} - que está em \textit{Kotlin});
     \item Uma determinada funcionalidade não consegue ser implementada de forma comum porque:
     \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
         \item é necessário saber detalhes específicos do \textit{target} para a sua implementação.
-        Usando o padrão \textit{expect/actual} é possível criar definições comuns (\textit{expect}) e implementações específicas para cada \textit{target} (\textit{actual});
-        \item as bibliotecas disponíveis para código comum (\textit{Standard Kotlin Library + Kotlinx}) não cobrem a(s) funcionalidade(s) pretendida(s) e não ser que se utilize outra(s) biblioteca(s) \textit{KMP} como dependência(s) do projeto, se existir(em).
+        Usando o padrão \textit{expect/actual} é possível criar definições comuns (i.e., \textit{expect}) e implementações específicas para cada \textit{target} (i.e., \textit{actual});
+        \item as bibliotecas disponíveis para código comum (i.e., \textit{Standard Kotlin Library, Kotlinx}) não cobrem a(s) funcionalidade(s) pretendida(s) e não ser que se utilize outra(s) biblioteca(s) \textit{KMP} como dependência(s) do projeto, se existir(em).
     \end{itemize}
+    \item Um determinado \textit{target} não suporta diretamente o \textit{KMP} (e.g., \textit{Node.js)}, e por isso é necessário criar um \textit{adapter} para a comunicação com o código comum (\textit{CommonMain} - que está em \textit{Kotlin});
 \end{itemize}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{../docs/imgs/kmp-architecture}
-    \caption{Arquitetura do KMP}
+    \caption{Arquitetura do KMP.}
     \label{fig:kmp-architecture}
 \end{figure}
 

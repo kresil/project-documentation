@@ -38,4 +38,10 @@
 \newblock \url{https://kotlinlang.org/docs/multiplatform.html}, 2024.
 \newblock [Online; accessed 7-March-2024].
 
+\bibitem{ktor}
+{JetBrains contributors}.
+\newblock Ktor: Web applications.
+\newblock \url{https://ktor.io}, 2024.
+\newblock [Online; accessed 7-March-2024].
+
 \end{thebibliography}
