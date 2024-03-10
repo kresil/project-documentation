@@ -28,9 +28,9 @@ Exemplos de mecanismos de resiliência disponibilizados por estas bibliotecas:
 
 \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
     \item \textbf{Retry}: Tenta novamente uma operação que falhou, aumentando a probabilidade de sucesso;
-    \item \textbf{Rate Limiter}: Limita a taxa de requisições que um serviço pode receber;
+    \item \textbf{Rate Limiter}: Limita a taxa de requisições que um determinado serviço pode receber;
     \item \textbf{Circuit Breaker}: Interrompe, temporariamente, a comunicação com um serviço que está a falhar, de forma a evitar que o mesmo sobrecarregue o sistema. Semelhante a um disjuntor elétrico;
-    \item \textbf{Fallback}: Fornecer um valor ou executa uma ação alternativa caso uma operação falhe.
+    \item \textbf{Fallback}: Fornece um valor ou executa uma ação alternativa caso uma operação falhe.
 \end{itemize}
 
 A biblioteca Polly~\cite{polly-dotnet} divide os mecanismos de resiliência que disponibiliza em duas categorias:
@@ -44,7 +44,7 @@ A biblioteca Polly~\cite{polly-dotnet} divide os mecanismos de resiliência que 
 
 A tecnologia \textit{Kotlin Multiplatform}~\cite{kmp} possibilita a partilha do código comum da aplicação entre diversas plataformas, tornando-o independente de qualquer plataforma específica.
 
-Para cada plataforma alvo, regularmente denominada como \textit{target}, poderão ter que existir implementações exclusivas porque:
+Para cada plataforma alvo, regularmente denominada como \textit{target}, poderão ter que existir implementações exclusivas, visto que:
 
 \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
     \item Uma determinada funcionalidade não consegue ser implementada de forma comum porque:
@@ -63,7 +63,7 @@ Para cada plataforma alvo, regularmente denominada como \textit{target}, poderã
     \label{fig:kmp-architecture}
 \end{figure}
 
-Portanto, o objetivo principal do \textit{KMP} é maximizar a reutilização de código, minimizando o código específico de cada plataforma visto que terá que ser replicado para cada plataforma suportada.
+Portanto, o objetivo principal do \textit{KMP} é maximizar a reutilização de código, minimizando o código específico de cada \textit{target}, visto que terá que ser replicado para cada \textit{target} que se pretenda suportar.
 
 \subsection{Ktor}\label{subsec:ktor}
 
