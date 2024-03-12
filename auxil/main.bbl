@@ -8,12 +8,6 @@
   2024.
 \newblock [Online; accessed 5-March-2024].
 
-\bibitem{cap-theorem}
-{Wikipedia contributors}.
-\newblock Cap theorem.
-\newblock \url{https://en.wikipedia.org/wiki/CAP_theorem}, 2024.
-\newblock [Online; accessed 5-March-2024].
-
 \bibitem{netflix-hystrix}
 {Netflix contributors}.
 \newblock Hystrix: Latency and fault tolerance for distributed systems.
@@ -37,6 +31,13 @@
 \newblock Kotlin multiplatform.
 \newblock \url{https://kotlinlang.org/docs/multiplatform.html}, 2024.
 \newblock [Online; accessed 7-March-2024].
+
+\bibitem{kmp-expect-actual}
+{JetBrains contributors}.
+\newblock Kotlin multiplatform: Expect/actual.
+\newblock \url{https://kotlinlang.org/docs/multiplatform-expect-actual.html},
+  2024.
+\newblock [Online; accessed 12-March-2024].
 
 \bibitem{ktor}
 {JetBrains contributors}.

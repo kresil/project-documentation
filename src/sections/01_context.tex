@@ -1,14 +1,25 @@
-\subsection{Necessidade de Desenho de Software Resiliente}
-Grande parte dos sistemas contemporâneos são sistemas distribuídos, ou seja, representam um conjunto de computadores independentes entre si, ligados através de uma rede de dados, que se apresentam aos utilizadores como um sistema único e coerente~\cite{fcc-distributed-systems}.
-No entanto, essa interdependência traz consigo o risco de falhas, e quando um desses componentes falha, toda ou parte da funcionalidade do sistema pode ser comprometida.
-Tal pode resultar em perda de dados, indisponibilidade de serviços e outros problemas, dependendo da criticidade do(s) componente(s) afetado(s)~\cite{cap-theorem}.
-É neste contexto que surge a necessidade de desenhar software resiliente, capaz de lidar com falhas e manter a sua funcionalidade mesmo quando um ou mais dos seus componentes falham ou estão temporariamente indisponíveis.
+\subsection{Necessidade de Desenho de Software Resiliente}\label{subsec:necessidade-de-desenho-de-software-resiliente}
+A utilização de sistemas distribuídos é cada vez mais preponderante nos tempos atuais.
+Estes sistemas representam um conjunto de computadores independentes e interligados em rede, que se apresentam aos utilizadores como um sistema único e coerente~\cite{fcc-distributed-systems}.
 
-% \subsection{Tolerância a Falhas vs. Resiliência}
+Dado a constante necessidade destes sistemas estarem disponíveis, aliados à sua complexidade de funcionamento, é natural que estejam suscetíveis a falhas de comunicação, de hardware, de software, entre outras.
+Por esse motivo, existe a necessidade de garantir que os serviços que disponibilizam sejam resilientes, e mais concretamente, tolerantes a falhas.
 
-\subsection{Bibliotecas como Mecanismos de Resiliência}
-Fornecem mecanismos para lidar com as eventuais falhas inerentes a componentes de um sistema distribuído, tentando garantir ao máximo a
-disponibilidade e confiabilidade dos serviços que estes disponibilizam.
+Um serviço tolerante a falhas, é um serviço que é capaz de manter a sua funcionalidade total ou parcial, ou apresentar uma alternativa, quando um ou mais componentes que lhes estão associados falham.
+De forma a alcançar este objetivo, foram desenhadas estratégias de resiliência.
+Alguns exemplos são:
+
+\begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
+    \item \textbf{Retry}: Tenta novamente uma operação que falhou, aumentando a sua probabilidade de sucesso;
+    \item \textbf{Rate Limiter}: Limita a taxa de requisições que um determinado serviço pode receber;
+    \item \textbf{Circuit Breaker}: Interrompe, temporariamente, a comunicação com um serviço que está a falhar, de forma a evitar que o mesmo sobrecarregue o sistema. Semelhante a um disjuntor elétrico;
+    \item \textbf{Fallback}: Fornece um valor ou executa uma ação alternativa caso uma operação falhe.
+\end{itemize}
+
+\subsection{Bibliotecas como Mecanismos de Resiliência}\label{subsec:bibliotecas-como-mecanismos-de-resiliencia}
+
+Existem bibliotecas que atuam como mecanismos de resiliência (Tabela~\ref{tab:resilience_libraries}) e que disponibilizam estratégias, também designadas como \textit{policies}.
+Estas podem ser configuradas consoante as necessidades do sistema e aplicadas a operações específicas, como por exemplo, a comunicação com um serviço externo.
 
 \begin{table}[h]
     \centering
@@ -16,59 +27,58 @@ disponibilidade e confiabilidade dos serviços que estes disponibilizam.
     \label{tab:resilience_libraries}
     \begin{tabular}{|l|l|l|l|}
         \hline
-        \textbf{Biblioteca} & \textbf{Linguagem} & \textbf{Plataforma} & \textbf{Ref}            \\ \hline
-        Netflix's Hystrix   & Java               & JVM                 & ~\cite{netflix-hystrix} \\ \hline
-        Resilience4j        & Java/Kotlin        & JVM                 & ~\cite{resilience4j}    \\ \hline
-        Polly               & C\#                & .NET                & ~\cite{polly-dotnet}    \\
+        \textbf{Biblioteca}                      & \textbf{Linguagem} & \textbf{Plataforma} \\ \hline
+        Netflix's Hystrix~\cite{netflix-hystrix} & Java               & JVM                 \\ \hline
+        Resilience4j~\cite{resilience4j}         & Java/Kotlin        & JVM                 \\ \hline
+        Polly ~\cite{polly-dotnet}               & C\#                & .NET                \\
         \hline
     \end{tabular}
 \end{table}
 
-Exemplos de mecanismos de resiliência disponibilizados por estas bibliotecas:
+A biblioteca Polly~\cite{polly-dotnet} divide as estratégias de resiliência em duas categorias:
 
 \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
-    \item \textbf{Retry}: Tenta novamente uma operação que falhou, aumentando a probabilidade de sucesso;
-    \item \textbf{Rate Limiter}: Limita a taxa de requisições que um determinado serviço pode receber;
-    \item \textbf{Circuit Breaker}: Interrompe, temporariamente, a comunicação com um serviço que está a falhar, de forma a evitar que o mesmo sobrecarregue o sistema. Semelhante a um disjuntor elétrico;
-    \item \textbf{Fallback}: Fornece um valor ou executa uma ação alternativa caso uma operação falhe.
-\end{itemize}
-
-A biblioteca Polly~\cite{polly-dotnet} divide os mecanismos de resiliência que disponibiliza em duas categorias:
-
-\begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
-    \item \textbf{Resiliência Reativa}: Reage a falhas e mitiga o seu impacto;
-    \item \textbf{Resiliência Proativa}: Previne que as falhas aconteçam.
+    \item \textbf{Resiliência Reativa}: Reage a falhas e mitiga o seu impacto (e.g., \textit{Retry, Circuit Breaker});
+    \item \textbf{Resiliência Proativa}: Previne que as falhas aconteçam (e.g., \textit{Rate Limiter, Timeout}).
 \end{itemize}
 
 \subsection{Kotlin Multiplatform}\label{subsec:kotlin-multiplatform}
 
-A tecnologia \textit{Kotlin Multiplatform}~\cite{kmp} possibilita a partilha do código comum da aplicação entre diversas plataformas, tornando-o independente de qualquer plataforma específica.
+A tecnologia \textit{Kotlin MultiPlatform}~\cite{kmp} (\textit{KMP}) possibilita a partilha do código da aplicação entre diversas plataformas.
+A sua arquitetura (Figura~\ref{fig:kmp-architecture}) é composta por três categorias principais:
 
-Para cada plataforma alvo, regularmente denominada como \textit{target}, poderão ter que existir implementações exclusivas, visto que:
+\begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
+    \item \textbf{Common}: Código partilhado entre todas as plataformas (i.e., \textit{CommonMain, CommonTest});
+    \item \textbf{Intermediary}: Código que pode ser partilhado num conjunto particular de plataformas;
+    \item \textbf{Specific}: Código específico de uma plataforma-alvo (i.e., \textit{\textless Plataform\textgreater Main, \textless Plataform\textgreater Test}).
+\end{itemize}
+
+O objetivo principal é a maximização da reutilização de código, ou seja, agregar o máximo de código possível na categoria \textit{Common}.
+No entanto, por vezes é necessário criar código específico para uma plataforma-alvo, regularmente denominada como \textit{target}, nas seguintes situações:
 
 \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
     \item Uma determinada funcionalidade não consegue ser implementada de forma comum porque:
     \begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
-        \item é necessário saber detalhes específicos do \textit{target} para a sua implementação.
-        Usando o padrão \textit{expect/actual} é possível criar definições comuns (i.e., \textit{expect}) e implementações específicas para cada \textit{target} (i.e., \textit{actual});
-        \item as bibliotecas disponíveis para código comum (i.e., \textit{Standard Kotlin Library, Kotlinx}) não cobrem a(s) funcionalidade(s) pretendida(s) e não ser que se utilize outra(s) biblioteca(s) \textit{KMP} como dependência(s) do projeto, se existir(em).
+        \item é necessário acesso a API's especificas do \textit{target};
+        \item as bibliotecas disponíveis para código comum (i.e., \textit{Standard Kotlin Library, Kotlinx}) não cobrem as funcionalidades pretendidas;
     \end{itemize}
-    \item Um determinado \textit{target} não suporta diretamente o \textit{KMP} (e.g., \textit{Node.js)}, e por isso é necessário criar um \textit{adapter} para a comunicação com o código comum (\textit{CommonMain} - que está em \textit{Kotlin});
+    \item Um determinado \textit{target} não suporta diretamente o \textit{KMP} (e.g., \textit{Node.js)}, e por isso é necessário criar um \textit{adapter} para a comunicação com o código comum.
 \end{itemize}
+
+Para criar código específico para um \textit{target} é utilizado o
+mecanismo \textbf{\textit{expect/actual}}~\cite{kmp-expect-actual}, que permite a definição do código a ser implementado e a sua implementação, respetivamente.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{../docs/imgs/kmp-architecture}
-    \caption{Arquitetura do KMP.}
+    \caption{Arquitetura do \textit{KMP}.}
     \label{fig:kmp-architecture}
 \end{figure}
 
-Portanto, o objetivo principal do \textit{KMP} é maximizar a reutilização de código, minimizando o código específico de cada \textit{target}, visto que terá que ser replicado para cada \textit{target} que se pretenda suportar.
-
 \subsection{Ktor}\label{subsec:ktor}
 
-É uma framework para \textit{KMP} desenhada para criar aplicações assíncronas de
-servidor e cliente, que se tornou popular devido à sua simplicidade e facilidade de utilização~\cite{ktor}.
+É uma framework \textit{KMP} modular para desenvolver aplicações assíncronas de
+servidor e cliente~\cite{ktor}.
 
-Além de leve e flexível, utiliza a linguagem \textit{Kotlin} e o sistema de \textit{Coroutines}, permitindo este último, de forma simplificada, a execução
-assíncrona de código de forma sequencial e sem bloqueio de threads, tirando maior proveito do sistema computacional disponível.
+Desenvolvida pela \textit{JetBrains}, foi construída com \textit{Kotlin} puro e está integrada com o sistema de \textit{Coroutines}. Sistema esse que permite a definição de
+código assíncrono de forma sequencial e a sua execução sem bloqueio de threads, tirando maior proveito do sistema computacional disponível.

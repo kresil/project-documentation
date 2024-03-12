@@ -1,2 +1,7 @@
-A não existência de bibliotecas como mecanismos de resiliência em \textit{Kotlin} que sejam multiplataforma, comprometendo a robustez de certas aplicações \textit{KMP}.
-No entanto, a biblioteca \textit{Resilience4j} já providencia um módulo de interoperabilidade com \textit{Kotlin}, mas apenas exclusivamente para a \textit{JVM}.
+A biblioteca \textit{Resilience4j}~\cite{resilience4j}, que foi desenhada para \textit{Java}, já providencia um módulo de interoperabilidade com \textit{Kotlin}, mas apenas exclusivamente para a \textit{JVM}.
+Por esse motivo, aplicações \textit{KMP} que necessitem de estratégias de resiliência têm de escolher entre:
+
+\begin{itemize}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
+    \item recorrer a bibliotecas que atuam como mecanismos de resiliência e que são específicas para cada \textit{target}, o que aumenta a complexidade e a redundância do código;
+    \item implementar a sua própria solução, o que aumenta, principalmente, o tempo de desenvolvimento.
+\end{itemize}
