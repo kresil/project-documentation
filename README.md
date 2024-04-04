@@ -38,7 +38,7 @@
        ext.set("variable", "value")
        ```
       | Variable          | Default value | Description                                                                     |
-            |-------------------|---------------|---------------------------------------------------------------------------------|
+      |-------------------|---------------|---------------------------------------------------------------------------------|
       | `srcDirName`      | `src`         | name of the tex source file's directory                                         |
       | `outDirName`      | `out`         | name of the output directory, where the pdf file will be generated to           |
       | `auxDirName`      | `auxil`       | name of the auxiliary directory, where the auxiliary files will be generated to |
@@ -49,8 +49,10 @@
    as the latter has more compile iterations to resolve the bibliography references.
     - In the run configuration panel, edit the paths to the corresponding subproject directories:
 
-   ![Run Configuration](docs/gifs/idea-main-tex-configuration.gif)
-   
+   | ![Run Configuration](docs/gifs/idea-main-tex-configuration.gif) |
+   |:---------------------------------------------------------------:|
+   |                    *Edit Run Configuration*                     |
+
     - To compile the document use the shortcut `Shift + F10` or the gutter icon `Run`.
 
 > [!IMPORTANT]
