@@ -1,9 +1,9 @@
 # Project Documentation
 
-## Subprojects
+## Documents
 
-- [project-proposal](project-proposal)
-- [project-report](project-report)
+- [project-proposal](project-proposal/out/main.pdf)
+- [project-report](project-report/out/main.pdf)
 
 ## Instructions
 
