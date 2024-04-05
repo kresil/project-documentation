@@ -12,10 +12,10 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  # This workflow contains a job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -26,8 +26,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      # taken from: https://github.com/koppor/mwe-miktex/blob/main/.github/workflows/miktex.yml#L80-L95
+      - name: Install MiKTeX
+        run: |
+          choco install miktex --no-progress
+          echo "C:\Program Files\MiKTeX\miktex\bin\x64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+      - name: Configure MiKTeX
+        run: |
+          initexmf --admin --verbose --set-config-value=[MPM]AutoInstall=1
+          miktex --admin --verbose packages update-package-database
+          miktex --admin --verbose packages update
+          miktex --verbose packages update
+          miktex --admin --verbose packages install cm-super
+          miktex --admin --verbose fndb refresh
+          initexmf --admin --verbose --update-fndb
+          initexmf --admin --verbose --mklinks --force
+          updmap --admin
+          initexmf --report > miktex-report.txt
 
       - name: Compile and build all latex documents using Gradle
-        run: ./gradlew buildAllPdfs
+        run: ./gradlew buildAllPdfs --stacktrace
