@@ -1,5 +1,15 @@
 # Project Documentation
 
+## Table of Contents
+
+- [Documents](#documents)
+- [Instructions](#instructions)
+  - [Configure LaTeX environment in Intellij IDEA](#configure-latex-environment-in-intellij-idea)
+  - [Add a new subproject](#add-a-new-subproject)
+  - [Compile and build all subprojects](#compile-and-build-all-subprojects)
+    - [Manually](#manually)
+    - [Automatically](#automatically)
+
 ## Documents
 
 - [project-proposal](project-proposal/out/main.pdf)
@@ -21,12 +31,12 @@
 1. Create in root folder a new folder with the name of the subproject;
 2. Go to [settings.gradle.kts](settings.gradle.kts) and add the new subproject with:
     ```kotlin
-    include(":module-name")
+    include(":subproject-name")
     ```
-3. Compile and build pdf, resolving any bibliographic references, with the Gradle task `buildPdf` using the Gradle Menu
+3. Compile and build pdf, resolving any bibliographic references, with the Gradle task `buildPdf` using the Gradle Panel
    or the following command in the terminal:
     ```bash
-    ./gradlew :module-name:buildPdf
+    ./gradlew :subproject-name:buildPdf
     ```
 
 4. **[Optional]** Configure alternative names for the subproject directories and the main tex file in
@@ -56,14 +66,21 @@
     - To compile the document use the shortcut `Shift + F10` or the gutter icon `Run`.
 
 > [!IMPORTANT]
-> It is advised to not delete the generated auxiliary files, as they can be used in subsequent compilations to speed up
+> It is advised to not delete the generated auxiliary files as they can be used in subsequent compilations to speed up
 > the process.
 
 ### Compile and build all subprojects
 
+#### Manually
+
 To compile and build all pdfs in all subprojects, use the Gradle task `buildAllPdfs` which can be found in the Gradle
-Menu or by running the following command in the terminal:
+Panel or by running the following command in the terminal:
 
 ```bash
 ./gradlew buildAllPdfs
 ```
+
+#### Automatically
+
+A [github action](.github/workflows/compile-all-documents.yaml) is set up
+to automatically compile and build all pdfs in all subprojects when a `push` is made to the `main` branch of this repository.
