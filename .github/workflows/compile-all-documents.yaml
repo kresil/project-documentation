@@ -75,7 +75,6 @@ jobs:
           miktex --verbose fontmaps configure
           miktex --verbose fndb refresh
           initexmf --verbose --update-fndb
-          updmap
           initexmf --report > miktex-report.txt
 
       - name: Compile and build all latex documents using Gradle
