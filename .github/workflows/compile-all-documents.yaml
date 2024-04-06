@@ -1,7 +1,7 @@
 name: Compile and build all latex documents
 
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
+  # Triggers the workflow on push or pull request events but only for the default branch (main, in this case)
   push:
     branches: [ "main" ]
   pull_request:
@@ -10,24 +10,73 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Defines concurrent policies for the workflow, for example, if a commit is made while
+# the workflow is running, should the current run be cancelled or should the new run be queued
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  # This workflow contains a job called "build"
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout sources
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 19
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
 
+      # docs: https://github.com/actions/starter-workflows/issues/171
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Cache Miktex
+        id: cache-miktex
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-miktex-install
+        with:
+          path: ~/.miktex
+          key: ${{ runner.os }}-miktex-${{ hashFiles('**/*.sty') }}
+
+      # using id from the previous step
+      - if: ${{ steps.cache-miktex.outputs.cache-hit != 'true' }}
+        name: Install and Update MikTeX
+        run: |
+          echo "${HOME}/bin" >> $GITHUB_PATH
+          set -e
+          sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/miktex.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D6BC243565B2087BC3F897C9277A7293F59E4889
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/miktex.gpg] https://miktex.org/download/ubuntu jammy universe" | sudo tee /etc/apt/sources.list.d/miktex.list
+          sudo apt-get update -y -q
+          sudo apt-get install -qq -y --no-install-recommends miktex
+          miktexsetup --verbose finish
+          initexmf --verbose --set-config-value=[MPM]AutoInstall=1
+          miktex --verbose packages update-package-database
+          miktex --verbose packages update
+          miktex --verbose packages install cm-super amsfonts
+          miktex --verbose fontmaps configure
+          miktex --verbose fndb refresh
+          initexmf --verbose --update-fndb
+          initexmf --report > miktex-report.txt
+
       - name: Compile and build all latex documents using Gradle
-        run: ./gradlew buildAllPdfs
+        run: ./gradlew buildAllPdfs --stacktrace
+
+      # Commit all changed files back to the repository
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
