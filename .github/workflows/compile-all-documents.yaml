@@ -4,8 +4,15 @@ on:
   # Triggers the workflow on push or pull request events but only for the default branch (main, in this case)
   push:
     branches: [ "main" ]
+    paths:
+      - '**/*.tex'
+      - '**/*.bib'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - '**/*.tex'
+      - '**/*.bib'
+
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -41,7 +48,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - if : ${{ github.event_name != 'pull_request'}}
+      - if: ${{ github.event_name != 'pull_request'}}
         name: Normal checkout
         uses: actions/checkout@v4
 
