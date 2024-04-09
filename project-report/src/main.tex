@@ -1,4 +1,4 @@
-\documentclass[a4paper,twoside,11pt]{article}
+\documentclass[a4paper,openright,twoside,11pt]{report}
 
 % ----------------------------------------------------------------------
 % Defines external packages, language, margins, fonts and new commands
@@ -9,22 +9,53 @@
 
     \input{frontcover}
 
-    \section{Contexto}\label{sec:contexto}
-    \input{sections/01_context}
+    % line spacing: 12pt for single, 18pt for 1 1/2, and 24pt for double spacing
+    \baselineskip 18pt
+    \newpage
+    \thispagestyle{empty}
 
-    \section{Problema}\label{sec:problema}
-    \input{sections/02_problem}
+    \cleardoublepage
+    \setcounter{page}{1}
+    \input{idpage}
 
-    \section{Solução}\label{sec:solucao}
-    \input{sections/03_solution}
+    \cleardoublepage
+    \input{abstracts/en-abstract}
 
-    \section{Desafios e Potenciais Riscos}\label{sec:desafios-riscos}
-    \input{sections/04_challenges-risks}
+    \cleardoublepage
+    \input{abstracts/pt-abstract}
 
-    \section{Planeamento}\label{sec:planeamento}
-    \input{sections/05_planning}
+    %% página de agradecimentos
+    %\cleardoublepage
+    %\chapter*{Agradecimentos} % * indica que o capítulo não é numerado
+    %Texto dos agradecimentos. É opcional.\\
 
+    % geração do índice de conteúdos
+    \cleardoublepage
+    \tableofcontents
+    \cleardoublepage
+
+    % geração do índice de figuras e de tabelas
+    %\listoffigures \cleardoublepage
+    %\listoftables \cleardoublepage
+
+    % reiniciar a numeração de páginas
+    \setcounter{page}{1}
+    \pagenumbering{arabic}
+
+    % capítulos
+    \input{chapters/01_introduction}
+    \input{chapters/02_context}
+    \input{chapters/03_examples}
+    \input{chapters/04_tests}
+
+    % referências
+    \clearpage
     \bibliographystyle{unsrt}
     \bibliography{bibliography}
+    \addcontentsline{toc}{chapter}{Refer\^{e}ncias}
+
+    % apêndices (opcional)
+    \appendix
+    \input{apendices/A_lipsum}
 
 \end{document}
