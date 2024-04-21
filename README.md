@@ -82,7 +82,7 @@ Panel or by running the following command in the terminal:
 
 #### Automatically
 
-A [workflow using github actions](.github/workflows/compile-all-documents.yaml) is set up
+A [workflow using github actions](.github/workflows/compile-and-deploy-all-documents.yaml) is set up
 to automatically compile
 and build all pdfs in all subprojects when a `push`is made to the repository in the `main` branch or from
 a `pull request`.
