@@ -12,6 +12,7 @@
 
 ## Documents
 
+- [presentations](presentations)
 - [project-proposal](project-proposal/out/main.pdf)
 - [project-report](project-report/out/main.pdf)
 
