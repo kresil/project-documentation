@@ -1,8 +1,5 @@
 \documentclass[a4paper,openright,twoside,11pt]{report}
 
-% ----------------------------------------------------------------------
-% Defines external packages, language, margins, fonts and new commands
-% ----------------------------------------------------------------------
 \input{preamble}
 
 \begin{document}
@@ -24,38 +21,37 @@
     \cleardoublepage
     \input{abstracts/pt-abstract}
 
-    %% página de agradecimentos
     %\cleardoublepage
-    %\chapter*{Agradecimentos} % * indica que o capítulo não é numerado
-    %Texto dos agradecimentos. É opcional.\\
+    %\chapter*{Acknowledgements}
 
-    % geração do índice de conteúdos
+    % generate table of contents (TOC)
     \cleardoublepage
     \tableofcontents
     \cleardoublepage
 
-    % geração do índice de figuras e de tabelas
+    % generation of list of figures and tables
     %\listoffigures \cleardoublepage
     %\listoftables \cleardoublepage
 
-    % reiniciar a numeração de páginas
+    % reset page numbering
     \setcounter{page}{1}
     \pagenumbering{arabic}
 
-    % capítulos
+    % chapters
     \input{chapters/01_introduction}
-    \input{chapters/02_context}
-    \input{chapters/03_examples}
-    \input{chapters/04_tests}
+    \input{chapters/02_kmp}
+    \input{chapters/03_common_design}
+    \input{chapters/04_retry}
+    \input{chapters/05_cbreaker}
 
-    % referências
+    % references
     \clearpage
     \bibliographystyle{unsrt}
     \bibliography{bibliography}
-    \addcontentsline{toc}{chapter}{Refer\^{e}ncias}
+    \addcontentsline{toc}{chapter}{References}
 
-    % apêndices (opcional)
+    % apêndices
     \appendix
-    \input{apendices/A_lipsum}
+    \input{appendices/A_lipsum}
 
 \end{document}
