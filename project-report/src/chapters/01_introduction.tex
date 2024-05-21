@@ -3,13 +3,46 @@
 
 \section{Context}\label{sec:context}
 
-Problem #1~\cite{wiki:bigdata2019}
+In the modern era, our reliance on digital services has grown exponentially, driving the need for these services to be highly reliable and available at all times. Whether it's financial transactions, healthcare systems, or social media platforms, users expect uninterrupted access and seamless experiences. This expectation places significant pressure on the underlying infrastructure to handle failures gracefully and maintain service continuity. Achieving this level of reliability requires sophisticated mechanisms to manage and mitigate faults effectively.
+
+Most of these services are built on top of a distributed system,
+which consist of independent networked computers that present themselves to users as a single,
+coherent system~\cite{fcc-distributed-systems}. Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors. As such, its is crucial to ensure that services within distributed systems are resilient and fault-tolerant.
+
+Fault tolerance and fault resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences~\cite{bottomley2004fault}:
+
+\begin{itemize}
+    \item {\textbf{Fault Tolerance}}:
+    A fault-tolerant service is a service that is able to maintain all or part of its functionality,
+    or provide an alternative, when one or more of its associated components fail.
+    The user does not observe see any fault except for some possible delay during which failover occurs.
+    \item {\textbf{Fault Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.).
+\end{itemize}
+
+These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault resilient service counts toward downtime.
 
 
 \section{Resilience Mechanisms}\label{sec:resilience-mechanisms}
 
-Solution #1
+Over the years, several resilience mechanisms have been developed to help implemented build more robust and reliable systems. These mechanisms provide a set of tools and strategies to handle the inevitable occurrence of failures. Some of the most common mechanisms are described in table~\ref{tab:resilience-patterns}.
 
+\begin{table}[h!]
+    \centering
+    \caption{Resiliency mechanisms from \textit{Resilience4j}~\cite{resilience4j} documentation}
+    \label{tab:resilience-patterns}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{6cm}|p{6cm}|}
+        \hline
+        \textbf{Name}            & \textbf{Funcionality}                                                              & \textbf{Description}                                                                      \\ \hline
+        \textbf{Retry}           & Repeats failed executions.                                                         & Many faults are transient and may self-correct after a short delay.                       \\ \hline
+        \textbf{Circuit Breaker} & Temporary blocks possible failures.                                                & When a system is seriously struggling, failing fast is better than making clients wait.   \\ \hline
+        \textbf{Rate Limiter}    & Limits executions/period.                                                          & Limit the rate of incoming requests.                                                      \\ \hline
+        \textbf{Time Limiter}    & Limits duration of execution.                                                      & Beyond a certain wait interval, a successful result is unlikely.                          \\ \hline
+        \textbf{Bulkhead}        & Limits concurrent executions.                                                      & Resources are isolated into pools so that if one fails, the others will continue working. \\ \hline
+        \textbf{Cache}           & Memorizes a successful result.                                                     & Some proportion of requests may be similar.                                               \\ \hline
+        \textbf{Fallback}        & Defines an alternative value to be returned (or action to be executed) on failure. & Things will still fail - plan what you will do when that happens. \\ \hline
+    \end{tabular}
+\end{table}
 
 \section{Technologies}\label{sec:technologies}
 

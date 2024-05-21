@@ -13,3 +13,13 @@
 \setlength{\headsep}{0cm}
 \setlength{\oddsidemargin}{0.25cm}
 \setlength{\evensidemargin}{0.25cm}
+
+
+\usepackage{enumitem}
+\setlist[enumerate,1]{label=\arabic*}
+\setlist[enumerate,2]{label=\theenumi.\arabic*}
+\setlist[enumerate,3]{label=\theenumii.\arabic*}
+
+% defines a new list with bold enumerate
+\newlist{boldenumerate}{enumerate}{1}
+\setlist[boldenumerate]{label=\textbf{\arabic*.}}
