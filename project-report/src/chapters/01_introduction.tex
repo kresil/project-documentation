@@ -7,7 +7,9 @@ In the modern era, our reliance on digital services has grown exponentially, dri
 
 Most of these services are built on distributed systems,
 which consist of independent networked computers that present themselves to users as a single,
-coherent system~\cite{fcc-distributed-systems}. Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors. As such, its is crucial to ensure that services within distributed systems are resilient and fault-tolerant.
+coherent system~\cite{fcc-distributed-systems}.
+Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors.
+As such, its is crucial to ensure that services within distributed systems are resilient, and more specifically, fault-tolerant.
 
 Fault tolerance and fault resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences:
 
@@ -19,14 +21,14 @@ Fault tolerance and fault resilience are key concepts in this context, and while
     \item {\textbf{Fault Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.).
 \end{itemize}
 
-These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault resilient service counts toward downtime~\cite{bottomley2004fault}.
+These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault resilient service counts toward downtime~\cite{fault-tolerance-vs-fault-resilience}.
 
 
 \section{Resilience Mechanisms}\label{sec:resilience-mechanisms}
 
 Over the years, several resilience mechanisms have been developed to help implemented build more robust and reliable systems. These mechanisms provide a set of tools and strategies to handle the inevitable occurrence of failures. Some of the most common mechanisms are described in table~\ref{tab:resilience-patterns}.
 
-\begin{table}[h!]
+\begin{table}[htbp]
     \centering
     \caption{Resilience mechanisms examples. \textit{Resilience4j}~\cite{resilience4j} documentation}\label{tab:resilience-patterns}
     \vspace{0.3cm}
