@@ -5,7 +5,7 @@
 
 In the modern era, our reliance on digital services has grown exponentially, driving the need for these services to be highly reliable and available at all times. Whether it's financial transactions, healthcare systems, or social media platforms, users expect uninterrupted access and seamless experiences. This expectation places significant pressure on the underlying infrastructure to handle failures gracefully and maintain service continuity. Achieving this level of reliability requires sophisticated mechanisms to manage and mitigate faults effectively.
 
-Most of these services are built on top of a distributed system,
+Most of these services are built on distributed systems,
 which consist of independent networked computers that present themselves to users as a single,
 coherent system~\cite{fcc-distributed-systems}. Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors. As such, its is crucial to ensure that services within distributed systems are resilient and fault-tolerant.
 
@@ -62,12 +62,12 @@ Kotlin is a cross-platform, statically typed, general-purpose high-level program
 It was designed to have a strong focus on null safety, functional and asynchronous programming, while maintaining the rich feature set of object-oriented programming languages such as Java.
 Is in constant evolution, with new features and improvements being added regularly~\cite{kotlin-keep}.
 
-Google announced Kotlin as the official language for Android development in 2019~\cite{wiki:kotlin-programming-language}, and more recently, official support for Kotlin Multiplatform was added to the Android platform~\cite{android-kotlin-multiplatform, google-kotlin-multiplatform}.
+Google announced Kotlin as the official language for Android development in 2019~\cite{wiki:kotlin-programming-language}, and more recently, official support for Android development with Kotlin Multiplatform~\cite{android-kotlin-multiplatform, google-kotlin-multiplatform}.
 
 
 \section{Project Goal}\label{sec:project-goal}
 
-The goal of this project is to develop a Kotlin Multiplatform library that provides some of the forementioned resilience mechanisms and allow for further integration with other libraries and frameworks.
+The goal of this project is to develop a Kotlin Multiplatform library that provides some of the aforementioned resilience mechanisms and allow for further integration with other libraries and frameworks.
 
 By providing access to these mechanisms in a multiplaform context, developers can integrate them into their projects, regardless of the platform they are targeting.
 
@@ -77,7 +77,7 @@ By providing access to these mechanisms in a multiplaform context, developers ca
 \subsection{Ktor}\label{subsec:ktor}
 Ktor~\cite{ktor} is a Kotlin Multiplatform framework designed for building asynchronous servers and clients, such as web applications and microservices.
 
-The framework already provides some of the forementioned resilience mechanisms as plugins, that can installed in the underlying pipepile to intercept specific phases of the request/response cycle and apply the desired behavior (e.g., retrying a request in the client side~\cite{ktor-client-retry}, rate limiting the incoming requests in the server side~\cite{ktor-server-rate-limit}).
+The framework already provides some of the aforementioned resilience mechanisms as plugins, that can installed in the underlying pipepile to intercept specific phases of the request/response cycle and apply the desired behavior (e.g., retrying a request in the client side~\cite{ktor-client-retry}, rate limiting the incoming requests in the server side~\cite{ktor-server-rate-limit}).
 
 \subsection{Other Solutions}\label{subsec:other-solutions}
 
@@ -101,7 +101,6 @@ The table~\ref{tab:resilience_libraries} shows some examples of these libraries.
     \end{tabular}
 \end{table}
 
-
 Hystrix served as an inspiration for Resilience4J, which is based on functional programming concepts.
 The primary distinction between the two is that, whereas Resilience4J relies on function composition to let you stack the specific decorators you need by utilizing Java 8's features (e.g., functional interfaces, lambda expressions)~\cite{resilience4j-vs-hystrix}, Hystrix embraces an object-oriented design where calls to external systems have to be wrapped in a \textit{HystrixCommand} offering multiple functionalities.
 
@@ -113,6 +112,7 @@ Polly was used as secondary source to explore alternative approaches and design 
 The Arrow library, which presents itself as the functional companion to Kotlin's standard library, focuses on functional programming and includes, among other modules, a resilience library.
 This library implements three of the most critical design pattern around resilience~\cite{arrow-resilience}: retry and repeat computations using a \textit{Schedule}, protect other services from being overloaded using a \textit{CircuitBreaker}, and implement transactional behavior in distributed systems in the form of a \textit{Saga}.
 
+
 \section{Document Structure}\label{sec:document-structure}
 
 This document is structured as follows:
@@ -122,5 +122,5 @@ This document is structured as follows:
     \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: This chapter describes the design and implementation aspects that are common to all the resilience mechanisms.
     \item \textbf{Chapter 4 - Retry}: This chapter describes the Retry mechanism, its configuration, and how it was implemented.
     \item \textbf{Chapter 5 - Circuit Breaker}: This chapter describes the Circuit Breaker mechanism, its configuration, and how it was implemented.
-    \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project and future work considerations.
+    \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project in a conclusion format and provides future work considerations.
 \end{itemize}
