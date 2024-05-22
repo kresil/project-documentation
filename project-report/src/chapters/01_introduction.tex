@@ -9,7 +9,7 @@ Most of these services are built on top of a distributed system,
 which consist of independent networked computers that present themselves to users as a single,
 coherent system~\cite{fcc-distributed-systems}. Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors. As such, its is crucial to ensure that services within distributed systems are resilient and fault-tolerant.
 
-Fault tolerance and fault resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences~\cite{bottomley2004fault}:
+Fault tolerance and fault resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences:
 
 \begin{itemize}
     \item {\textbf{Fault Tolerance}}:
@@ -19,7 +19,7 @@ Fault tolerance and fault resilience are key concepts in this context, and while
     \item {\textbf{Fault Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.).
 \end{itemize}
 
-These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault resilient service counts toward downtime.
+These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault resilient service counts toward downtime~\cite{bottomley2004fault}.
 
 
 \section{Resilience Mechanisms}\label{sec:resilience-mechanisms}
@@ -28,8 +28,7 @@ Over the years, several resilience mechanisms have been developed to help implem
 
 \begin{table}[h!]
     \centering
-    \caption{Resiliency mechanisms from \textit{Resilience4j}~\cite{resilience4j} documentation}
-    \label{tab:resilience-patterns}
+    \caption{Resilience mechanisms examples. \textit{Resilience4j}~\cite{resilience4j} documentation}\label{tab:resilience-patterns}
     \vspace{0.3cm}
     \begin{tabular}{|l|p{6cm}|p{6cm}|}
         \hline
@@ -44,23 +43,84 @@ Over the years, several resilience mechanisms have been developed to help implem
     \end{tabular}
 \end{table}
 
+These mechanisms can be further categorized based on when they are activated:
+
+\begin{itemize}
+    \item \textbf{Reactive Resilience}: Reacts to failures and mitigates their impact (e.g., the \textit{Retry} mechanism is only triggered after a failure occurs);
+    \item \textbf{Proactive Resilience}: Prevents failures from happening (e.g., the \textit{Rate Limiter} mechanism is used to limit the rate of incoming requests, as a way to prevent the system from being overwhelmed and potentially fail - acts before a failure occurs).
+\end{itemize}
+
+
 \section{Technologies}\label{sec:technologies}
 
-Kotlin Multiplatform (not in depth)
+The main technology used in this project is Kotlin Multiplatform (KMP)~\cite{kotlin-multiplatform}.
+This relatively new technology allows developers to share code across multiple platforms, such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
+
+The decision to use Kotlin Multiplatform, and more specifically, the Kotlin language, was based on it being the main language used in the B.Sc. in Computer Science and Engineering at Instituto Superior de Engenharia de Lisboa (ISEL) course and the rise in popularity of Kotlin in the industry.
+
+Kotlin is a cross-platform, statically typed, general-purpose high-level programming language with type inference developed by JetBrains, which is fully interoperable with Java~\cite{wiki:kotlin-programming-language}.
+It was designed to have a strong focus on null safety, functional and asynchronous programming, while maintaining the rich feature set of object-oriented programming languages such as Java.
+Is in constant evolution, with new features and improvements being added regularly~\cite{kotlin-keep}.
+
+Google announced Kotlin as the official language for Android development in 2019~\cite{wiki:kotlin-programming-language}, and more recently, official support for Kotlin Multiplatform was added to the Android platform~\cite{android-kotlin-multiplatform, google-kotlin-multiplatform}.
 
 
 \section{Project Goal}\label{sec:project-goal}
 
-Multiplatform library for kmp with resilience mechanisms
+The goal of this project is to develop a Kotlin Multiplatform library that provides some of the forementioned resilience mechanisms and allow for further integration with other libraries and frameworks.
+
+By providing access to these mechanisms in a multiplaform context, developers can integrate them into their projects, regardless of the platform they are targeting.
 
 
 \section{Related Work}\label{sec:related-work}
 
 \subsection{Ktor}\label{subsec:ktor}
-Mention plugin integration
+Ktor~\cite{ktor} is a Kotlin Multiplatform framework designed for building asynchronous servers and clients, such as web applications and microservices.
 
-\subsection{Other solutions}\label{subsec:other-solutions}
-Other libraries with resilience mechanisms: Polly, resilience4j, Hystrix, Arrow
+The framework already provides some of the forementioned resilience mechanisms as plugins, that can installed in the underlying pipepile to intercept specific phases of the request/response cycle and apply the desired behavior (e.g., retrying a request in the client side~\cite{ktor-client-retry}, rate limiting the incoming requests in the server side~\cite{ktor-server-rate-limit}).
 
+\subsection{Other Solutions}\label{subsec:other-solutions}
+
+\subsubsection{Traditional Libraries}
+
+There are several libraries that provide resilience mechanisms for different programming languages and platforms.
+The table~\ref{tab:resilience_libraries} shows some examples of these libraries.
+
+\begin{table}[h!]
+    \centering
+    \caption{Examples of libraries that provide resilience mechanisms.}
+    \label{tab:resilience_libraries}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{Library}                         & \textbf{Language} & \textbf{Plataform} \\ \hline
+        Netflix's Hystrix~\cite{netflix-hystrix} & Java              & JVM                \\ \hline
+        Resilience4j~\cite{resilience4j}         & Java/Kotlin       & JVM                \\ \hline
+        Polly ~\cite{polly-dotnet}               & C\#               & .NET               \\
+        \hline
+    \end{tabular}
+\end{table}
+
+
+Hystrix served as an inspiration for Resilience4J, which is based on functional programming concepts.
+The primary distinction between the two is that, whereas Resilience4J relies on function composition to let you stack the specific decorators you need by utilizing Java 8's features (e.g., functional interfaces, lambda expressions)~\cite{resilience4j-vs-hystrix}, Hystrix embraces an object-oriented design where calls to external systems have to be wrapped in a \textit{HystrixCommand} offering multiple functionalities.
+
+Resilience4j served as the main source of inspiration for the project's development since it is a more modern way of implementing these mechanisms, follows a functional programming style, and is more in line with the characteristics of the Kotlin language.
+Polly was used as secondary source to explore alternative approaches and design patterns that could be used in the project.
+
+\subsubsection{Arrow Library}
+
+The Arrow library, which presents itself as the functional companion to Kotlin's standard library, focuses on functional programming and includes, among other modules, a resilience library.
+This library implements three of the most critical design pattern around resilience~\cite{arrow-resilience}: retry and repeat computations using a \textit{Schedule}, protect other services from being overloaded using a \textit{CircuitBreaker}, and implement transactional behavior in distributed systems in the form of a \textit{Saga}.
 
 \section{Document Structure}\label{sec:document-structure}
+
+This document is structured as follows:
+
+\begin{itemize}
+    \item \textbf{Chapter 2 - Kotlin Multiplatform}: This chapter provides an overview of Kotlin Multiplatform, its architecture, and how it can be used to share code across multiple platforms.
+    \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: This chapter describes the design and implementation aspects that are common to all the resilience mechanisms.
+    \item \textbf{Chapter 4 - Retry}: This chapter describes the Retry mechanism, its configuration, and how it was implemented.
+    \item \textbf{Chapter 5 - Circuit Breaker}: This chapter describes the Circuit Breaker mechanism, its configuration, and how it was implemented.
+    \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project and future work considerations.
+\end{itemize}
