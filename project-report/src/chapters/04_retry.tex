@@ -1,18 +1,59 @@
 \chapter{Retry}\label{ch:retry}
 
 
-\section{Introduction}\label{sec:retry-introduction}
+\section{Introduction}\label{sec:retry-context}
 
-- Why it exists (1)
-- Functional characterization (2)
+The retry mechanism is a resilience pattern that allows an application to handle transient failures when it tries to connect to a service or network resource.
+By transparently retrying a failed operation, the application can improve its stability and availability~\cite{microsoft-retry-pattern}.
 
+This mechanism is particularly useful when the application is interacting with services that are prone to temporary failures, such as network issues, temporary unavailability of services, or timeouts when services are overloaded.
+These issues are often brief and resolve themselves within a short period, meaning that retrying the operation after a short delay can often succeed (e.g., a call to a service that is temporarily overloaded might succeed if retried after a few seconds)~\cite{microsoft-retry-pattern}.
+
+Without a retry mechanism, an application might treat such transient failures as critical, leading to unnecessary disruptions in service, increased latency, and a poor user experience.
+
+If an application detects a failure when it tries to send a request to a remote service, it can handle the failure using the following strategies~\cite{microsoft-retry-pattern}:
+
+\begin{itemize}
+    \item \textbf{Cancel}: If the fault indicates that the failure isn't transient or is unlikely to be successful if repeated, the application should cancel the operation and report an exception (e.g., an authentication failure caused by providing invalid credentials is not likely to succeed no matter how many times it's attempted);
+    \item \textbf{Retry}: If the specific fault reported is unusual or rare, it might have been caused by unusual circumstances (e.g., a transient network issue).
+    In this case, the application could retry the failing request again immediately because the same failure is unlikely to be repeated (i.e., no-delay retry);
+    \item Retry after delay.
+    If the fault is caused by one of the more commonplace connectivity or busy failures, the network or service might need a short period while the connectivity issues are corrected or the backlog of work is cleared.
+    The application should wait for a suitable time before retrying the request.
+    The amount of time to wait before retrying, depends on:
+    \begin{itemize}
+        \item the type of failure and the probability that it'll be corrected during this time;
+        \item the delay strategy used (e.g., constant, linear, exponential);
+    \end{itemize}
+\end{itemize}
+
+\subsection{Delay Strategies}\label{subsec:retry-delay-strategies}
+
+The retry delay strategy defines the amount of time the application should wait before retrying the operation, and it can be one of the following:
+
+\begin{itemize}
+    \item \textbf{No Delay}: This strategy does not introduce any delay between retries;
+    \item \textbf{Constant Delay}: Introduces a fixed, constant delay between each retry attempt;
+    \item \textbf{Linear Delay}: Increases the delay duration linearly with each retry attempt.
+    The delay is calculated by multiplying the initial delay by the retry attempt number (e.g., initial delay=1s, retry attempt=4, result=[1, 2, 3, 4]);
+    \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt, by using the exponential backoff algorithm~\cite{wiki:exponential-backoff}.
+    Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., initial delay=1s, multiplier=2, retry attempt=4, result=[1, 2, 4, 8]);
+\end{itemize}
+
+In both linear and exponential delay strategies, a maximum delay can be set to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
+Additionally, a \textit{jitter}~\cite{wiki:jitter} can be introduced to randomize the calculated delay duration.
+This randomization can help avoid synchronization between multiple clients that are retrying the same operation at the same time, commonly known as the thundering herd problem~\cite{wiki:thundering-herd-problem}, by spreading out the retries over a period of time.
 
 \section{Configuration}\label{sec:retry-configuration}
 
-- mention default values and why they were chosen
-
+- Table with configuration options (do not mention result mapper as it is in experimental phase)
+- TODO: mention default values and why they were chosen
 
 \section{Implementation Aspects}\label{sec:retry-implementation-aspects}
+- Describe what deviates from the Mechanism model
 
+\subsection{Execution Flow}\label{subsec:retry-execution-flow}
+
+- Describe the state machine and the possible transitions, use drawing in presentation
 
 \section{Ktor Integration}\label{sec:retry-ktor-integration}
