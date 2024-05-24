@@ -17,8 +17,8 @@ Fault tolerance and fault resilience are key concepts in this context, and while
     \item {\textbf{Fault Tolerance}}:
     A fault-tolerant service is a service that is able to maintain all or part of its functionality,
     or provide an alternative, when one or more of its associated components fail.
-    The user does not observe see any fault except for some possible delay during which failover occurs.
-    \item {\textbf{Fault Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.).
+    The user does not observe see any fault except for some possible delay during which failover occurs;
+    \item {\textbf{Fault Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.);
 \end{itemize}
 
 These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault resilient service counts toward downtime~\cite{fault-tolerance-vs-fault-resilience}.
@@ -28,7 +28,7 @@ These distinctions are important, because it is possible to regard a fault-toler
 
 Over the years, several resilience mechanisms have been developed to help implemented build more robust and reliable systems. These mechanisms provide a set of tools and strategies to handle the inevitable occurrence of failures. Some of the most common mechanisms are described in table~\ref{tab:resilience-patterns}.
 
-\begin{table}[htbp]
+\begin{table}[!htb]
     \centering
     \caption{Resilience mechanisms examples. \textit{Resilience4j}~\cite{resilience4j} documentation}\label{tab:resilience-patterns}
     \vspace{0.3cm}
@@ -58,9 +58,9 @@ These mechanisms can be further categorized based on when they are activated:
 The main technology used in this project is Kotlin Multiplatform (KMP)~\cite{kotlin-multiplatform}.
 This relatively new technology allows developers to share code across multiple platforms, such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
 
-The decision to use Kotlin Multiplatform, and more specifically, the Kotlin language, was based on it being the main language used in the B.Sc. in Computer Science and Engineering at Instituto Superior de Engenharia de Lisboa (ISEL) course and the rise in popularity of Kotlin in the industry.
+The decision to adopt Kotlin Multiplatform, particularly the Kotlin language, stemmed from its prominence as the primary language in the BSc in Computer Science and Engineering program at Instituto Superior de Engenharia de Lisboa (ISEL). Moreover, the course structure, was recently influenced by the widespread adoption and popularity of Kotlin within the software development community.
 
-Kotlin is a cross-platform, statically typed, general-purpose high-level programming language with type inference developed by JetBrains, which is fully interoperable with Java~\cite{wiki:kotlin-programming-language}.
+Kotlin~\cite{wiki:kotlin-programming-language} is a cross-platform, statically typed, general-purpose high-level programming language with type inference developed by JetBrains~\cite{jetbrains}, which is fully interoperable with Java.
 It was designed to have a strong focus on null safety, functional and asynchronous programming, while maintaining the rich feature set of object-oriented programming languages such as Java.
 Is in constant evolution, with new features and improvements being added regularly~\cite{kotlin-keep}.
 
@@ -88,7 +88,7 @@ The framework already provides some of the aforementioned resilience mechanisms 
 There are several libraries that provide resilience mechanisms for different programming languages and platforms.
 The table~\ref{tab:resilience_libraries} shows some examples of these libraries.
 
-\begin{table}[h!]
+\begin{table}[!htb]
     \centering
     \caption{Examples of libraries that provide resilience mechanisms.}
     \label{tab:resilience_libraries}
@@ -120,9 +120,9 @@ This library implements three of the most critical design pattern around resilie
 This document is structured as follows:
 
 \begin{itemize}
-    \item \textbf{Chapter 2 - Kotlin Multiplatform}: This chapter provides an overview of Kotlin Multiplatform, its architecture, and how it can be used to share code across multiple platforms.
-    \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: This chapter describes the design and implementation aspects that are common to all the resilience mechanisms.
-    \item \textbf{Chapter 4 - Retry}: This chapter describes the Retry mechanism, its configuration, and how it was implemented.
-    \item \textbf{Chapter 5 - Circuit Breaker}: This chapter describes the Circuit Breaker mechanism, its configuration, and how it was implemented.
-    \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project in a conclusion format and provides future work considerations.
+    \item \textbf{Chapter 2 - Kotlin Multiplatform}: This chapter provides an overview of the Kotlin Multiplatform technology, its architecture, and how it can be used to share code across multiple platforms; Additionally, it describes the project structure, the adopted project structure, and how to run tests in a multiplatform context;
+    \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: This chapter describes the design and implementation aspects that are common to all the resilience mechanisms; Additionally, it describes the Ktor framework and how it was used in the project;
+    \item \textbf{Chapter 4 - Retry}: This chapter describes the Retry mechanism functionality, its configuration, how it was implemented in both the library and the Ktor framework as a plugin;
+    \item \textbf{Chapter 5 - Circuit Breaker}: This chapter describes the Circuit Breaker mechanism functionality, its configuration, how it was implemented in both the library and the Ktor framework as a plugin;
+    \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project in a conclusion format and ends with future work considerations;
 \end{itemize}

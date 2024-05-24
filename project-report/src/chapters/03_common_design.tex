@@ -9,26 +9,26 @@ These aspects, turned components, form the foundation of the future mechanisms i
 The Mechanism Model is composed of the following components:
 \begin{itemize}
     \item \textbf{Configuration}: Represents a set of policies that, in conjuction, define the mechanism's behavior (e.g., maximum number of retries, maximum wait duration, etc.);
-    \item \textbf{Asynchronous Context}: Represents the mechanism's execution context, responsible for state management and event emission;
+    \item \textbf{Asynchronous Context}: Represents the mechanism's execution context, responsible for state management and event emission in an asynchronous environment;
     \item \textbf{State}: Represents the internal state of the mechanism;
     \item \textbf{Implementation}: Applies the configuration to the mechanism's execution context.
     Represents the core component of the mechanism;
     \item \textbf{Registry}: Acts as a centralized container for storing and managing available mechanism implementations and their configurations.
-    The registry allows access to mechanism implementations throughout the application and enables the reuse of configurations to create new mechanisms.
+    The registry allows access to mechanism implementations throughout the application and enables the reuse of configurations to create new mechanisms;
     \item \textbf{Events}: Both the Asynchronous Context and Registry components are responsible for emitting events.
     The Asynchronous Context component emits events related to the mechanism's execution, such as internal state transition changes.
-    The Registry component emits events related to CRUD operations (Create, Read, Update, Delete) performed in the registry.
-    These events can be used for various purposes, such as logging and monitoring.
+    The Registry component emits events related to \textit{CRUD}~\cite{wiki:crud-operations} operations performed in the registry.
+    These events can be used for various purposes, such as logging and monitoring;
     \item \textbf{Metrics}: The mechanism's implementation component is responsible for recording metrics related to the mechanism's execution (e.g., number of retries, number of recorded failures, etc.).
-    These metrics can be used for monitoring and analysis purposes.
+    These metrics can be used for monitoring and analysis purposes;
     \item \textbf{Decorator}: The decorator is an extension of the Implementation component.
-    It is based on Resilience4J~\cite{resilience4j} decorators (i.e., high-order functions), and provide a convenient way to wrap code blocks with the mechanism's behavior.
+    It is based on Resilience4J~\cite{resilience4j} decorators (i.e., high-order functions), and provide a convenient way to wrap code blocks with the mechanism's behavior;
     \item \textbf{Ktor Plugin}: Responsible for the integration of the mechanism implementation with the Ktor pipeline.
     The Configuration component is also used to create a specific plugin configuration,
     which can be used to extend the mechanism's behavior and provide additional features in an HTTP context.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=0.8\textwidth]{../figures/03_mechanism-model}
     \caption{Mechanism Model}
@@ -37,36 +37,95 @@ The Mechanism Model is composed of the following components:
 
 \subsection{Configuration Design}\label{subsec:configuration-design}
 
-Since the start of the project, the Configuration component was designed to use the builder pattern~\cite{wiki:builder-pattern}.
-This way, separating the configuration definition (mutable) from the configuration usage (immutable).
-However, the initial implementation had a limitation: it was not possible to override a configuration object (i.e., create a new configuration object based on an existing one and only change a few properties while keeping the rest).
+Since the start of the project, the Configuration component was designed to use the builder pattern~\cite{wiki:builder-pattern}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
+However, this initial implementation had a limitation: it was not possible to override a configuration object (i.e., create a new configuration object based on an existing one, and only modify specific properties while keeping the rest of the properties unchanged).
 
-In order to overcome this limitation, the Configuration component, and more specifically, its builder, was redesigned
-to always receive a base configuration object in its creation.
-This modification allows for incremental configuration, essentially following the pattern: \texttt{config(default/initial) -> configBuilder -> config -> configBuilder -> config -> (...)}~\ref{ch:appendix-config-builder}.
+
+To address this limitation, the Configuration component, particularly its builder, was redesigned to always start with a base configuration object.
+This redesign enables incremental configuration, following a pattern where a configuration object is continually modified until the desired configuration is achieved.
+
+The configuration process is as follows:
+
+\begin{boldenumerate}
+    \item Begin with a default or initial (base) configuration object;
+    \item Pass this configuration to a configuration builder;
+    \item The builder potentially modifies the base configuration;
+    \item Generate a new configuration from the builder;
+    \item If further modifications are needed, pass the new configuration back to the builder, which will use it as the base configuration;
+    \item Repeat the process until the desired configuration is achieved.
+\end{boldenumerate}
 
 \subsection{Mechanism Execution Context}\label{subsec:mechanism-execution-context}
 
-The mechanism's execution context is crucial for ensuring proper operation across synchronous and asynchronous environments.
-Since the mechanisms are designed to be cross-platform, the execution context must be flexible and support asynchronous operations, particularly for JavaScript, one of the supported targets (see Section~\ref{sec:supported-targets}), which is single-threaded and requires asynchronous (non-blocking) operations.
-
-Independent of the execution environment, the execution context is one of the following forms:
+Independent of the execution environment, synchronous or asynchronous, the mechanism's execution context can only be one of the following:
 
 \begin{itemize}
-    \item \textbf{Per Mechanism}: A new execution context is created when the mechanism itself is instantiated (e.g., the Circuit Breaker mechanism has a single execution context for managing the circuit state, as multiple callers can interact with the mechanism at the same time).
-    \item \textbf{Per Decoration}: When a decorator is applied to an operation, it creates a new execution context specific to that decoration, before invoking the underlying operation.
+    \item \textbf{Per Mechanism}: A new execution context is created when the mechanism itself is instantiated (e.g., the Circuit Breaker mechanism has a single execution context for managing the circuit state, as multiple callers can interact with the mechanism at the same time);
+    \item \textbf{Per Decoration}: When a decorator is applied to an operation, it creates a new execution context specific to that decoration, before invoking the underlying operation;
     \item \textbf{Per Method Invocation}: A new execution context is created each time the decorated method is invoked.
     This is the most granular form of execution context, providing isolation for each method call.
     If the underlying operation is thread-safe, then this form of execution context is also thread-safe, as only the calling thread executes the context (e.g., the Retry mechanism creates a new execution context for each underlying operation invocation).
 \end{itemize}
 
+\subsection{Asynchronous Context}\label{subsec:asynchronous-context}
+
+Since the mechanisms are designed to be cross-platform, the execution context must be flexible and support asynchronous operations, particularly for JavaScript, one of the supported targets (see Section~\ref{sec:supported-targets}), which is single-threaded and requires asynchronous (non-blocking) operations.
+
+In Kotlin, asynchronous operations are typically handled using Kotlin Coroutines~\cite{kotlin-coroutines}, which provide a way to write asynchronous code in a sequential manner, leveraging the concept of suspending functions.
+
+\subsubsection{Thread}\label{subsubsec:thread}
+
+In computer science, a thread~\cite{wiki:thread} of execution is the smallest sequence of programmed instructions that can be managed independently by a scheduler, which is typically a part of the operating system.
+
+In addition to being managed independently by an operating system's scheduler, threads are fundamental units of execution within a process~\cite{wiki:process-computing}
+They enable concurrent execution of tasks, allowing a program to perform multiple operations simultaneously.
+
+\subsubsection{Kotlin Coroutines}\label{subsubsec:kotlin-coroutines}
+
+A coroutine is an instance of a potentially suspendable computation, which can be suspended and resumed at a later time.
+It is conceptually similar to a thread, in the sense that it takes a block of code to run that works concurrently with the rest of the code~\cite{kotlin-coroutines}.
+However, a coroutine is not bound to any particular thread, as it may suspend its execution in one thread and resume in another one.
+
+A suspended coroutine does not block the underlying thread, freeing it to run other coroutines or perform other tasks.
+In a thread, only one coroutine can run at a given time.
+
+Another important feature of coroutines is that they enforce structured concurrency~\cite{kotlin-coroutines}.
+Structured concurrency is a programming paradigm that enforces a hierarchical structure on concurrent code, ensuring that all concurrent tasks are properly managed and cleaned up, and any errors are propagated correctly and not lost.
+
+\subsection{Event Publishing}\label{subsec:event-publishing}
+
+Since the execution context is asynchronous, the events must be published asynchronously.
+To achieve this, the Kotlin Coroutines' asynchronous primitive Flow~\cite{kotlin-flow} was used to emit events.
+
+\subsubsection{Flow}\label{subsubsec:flow}
+
+A Flow~\cite{kotlin-flow} is a cold asynchronous stream that sequentially emits values and completes normally or with an exception.
+
+A cold stream starts emitting values only when it is collected, and each collector receives all the values from the beginning; this is in contrast to hot streams, which emit values regardless of whether they are collected or not.
+
+Flows differ from Sequences~\cite{kotlin-sequences} in that they are used for handling asynchronous streams of data that can emit multiple values over time, while sequences are used for handling synchronous streams of data that are computed on demand (lazy) and can only produce values once.
+
+\subsubsection{Implementation}
+
+All events in a mechanism are emitted using a hot Flow with no buffer, which means that, if there are no collectors (listeners) for the events, they are essentially lost (not recorded).
+As such, a listener must be registered before the event is emitted, in order to receive it.
+
+Every mechanism implementation has two ways to register listeners for events:
+
+\begin{itemize}
+    \item \textbf{onEvent}: Registers a listener to receive all events emitted by the mechanism;
+    \item \textbf{on\texttt{<}SpecificEvent\texttt{>}}: Registers a listener to receive only a specific type of event emitted by the mechanism.
+\end{itemize}
+
+The implementation also provides a way to cancel all registered listeners, by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
+The cancellation of the registered listeners up to a given time, does not affect subsequent registrations.
 
 \section{Ktor Integration}\label{sec:ktor-integration}
 
 Integration with Ktor was considered from the beginning of the project, because Ktor:
 \begin{itemize}
     \item provides a flexible pipeline-based architecture, which allows for integration of custom behavior;
-    \item is an official JetBrains product;
+    \item is an official JetBrains~\cite{jetbrains} product;
     \item is also a multiplatform framework, although server-side is limited to the JVM and Native targets~\cite{ktor-server-platforms}.
 \end{itemize}
 
@@ -88,7 +147,7 @@ Plugins are installed in the application's pipeline, where they can intercept an
 
 In the server side, as a request comes in, it goes through a series of steps~\cite{ktor-server-plugins}:
 
-\begin{boldenumerate}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
+\begin{boldenumerate}
     \item It is routed to the correct handler via the routing mechanism (which is also a plugin);
     \item Before being handed off to the handler, it goes through one or more Plugins;
     \item The handler (application logic) handles the request;
@@ -149,6 +208,7 @@ Ktor provides a custom plugin API that allows developers to create their own plu
 Since Ktor \texttt{2.0.0}, the custom plugin API has been simplified~\cite{ktor-server-custom-plugins, ktor-client-custom-plugins} and no longer requires an understanding of internal Ktor concepts, such as pipelines, phases, etc.
 Instead, developers have access to different stages of handling requests and responses using general handlers (e.g., \texttt{onCallReceive}, and \texttt{onCallRespond}), which intercept the related phases of the pipeline.
 
+
 \section{Development Roadmap}\label{sec:development-roadmap}
 
 Originally, the project was planned to be developed in a horizontal manner, where all mechanisms would be implemented for all targets at the same time, tested, and then integrated with Ktor.
@@ -157,11 +217,11 @@ However, due to the complexity of the mechanisms and the need to ensure that the
 in other contexts, the development strategy was changed to a vertical approach.
 
 For each mechanism, the following steps are taken:
-\begin{boldenumerate}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
-    \item \textbf{Mechanism Model Implementation}: Implement the Mechanism Model for a specific mechanism, including all of its components.
-    \item \textbf{Tests}: Write tests for the implemented Mechanism Model components.
-    \item \textbf{All Targets Support}: Ensure that the implemented Mechanism Model components work correctly for all targets.
-    \item \textbf{Ktor Plugin}: Implement the Ktor Plugin for the mechanism.
-    \item \textbf{Ktor Plugin Tests}: Write tests for the implemented Ktor Plugin.
-    Due to time constraints, unit tests were not conducted; however, integration tests~\cite{software-test-types} were performed using a real Ktor application.
+\begin{boldenumerate}
+    \item Implement the Mechanism Model for a specific mechanism, including all of its components;
+    \item Write tests for the implemented mechanism;
+    \item Ensure that the implemented mechanism work correctly for all targets;
+    \item Implement the Ktor Plugin that uses the implemented mechanism;
+    \item Write tests for the implemented Ktor Plugin;
+    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor application;
 \end{boldenumerate}

@@ -10,7 +10,7 @@ A Kotlin Multiplatform project is divided into three main categories of code:
 \begin{itemize}
     \item \textbf{Common}: Code shared between all platforms (i.e., \textit{CommonMain, CommonTest});
     \item \textbf{Intermediate}: Code that can be shared on a subset of platforms (i.e., \textit{AppleMain, AppleTest});
-    \item \textbf{Specific}: Code specific to a target platform (i.e., \textit{\textless Platform\textgreater Main, \textless Platform\textgreater Test}).
+    \item \textbf{Specific}: Code specific to a target platform (i.e., \texttt{\textit{<Platform>Main}}, \texttt{\textit{<Platform>Test}}).
 \end{itemize}
 
 
@@ -18,10 +18,9 @@ An example of a Kotlin Multiplatform project architecture can be seen in Figure~
 
 \begin{figure}[!htb]
     \centering
+    \includegraphics[width=0.9\textwidth]{../figures/02_kmp-architecture}
     \caption{Example of a \textit{KMP} project architecture.}
     \label{fig:kmp-architecture}
-    \vspace{0.3cm}
-    \includegraphics[width=0.9\textwidth]{../figures/02_kmp-architecture}
 \end{figure}
 
 \subsection{Template}\label{subsec:template}
@@ -37,9 +36,9 @@ Offers support for all phases of a build process including compilation, verifica
 In a Gradle build using Kotlin DSL (i.e., domain-specific language), the project's configuration is primarily defined in two key files:
 
 \begin{itemize}
-    \item \textit{build.gradle.kts} - Defines the project's build configuration.
-    In Kotlin Multiplatform projects, this file is used to define the project's targets, dependencies in the respective source sets, and additional configurations if needed.
-    \item \textit{settings.gradle.kts} - Defines the project's structure and modules it contains.
+    \item \textbf{build.gradle.kts} - Defines the project's build configuration.
+    In Kotlin Multiplatform projects, this file is used to define the project's targets, dependencies in the respective source sets, and additional configurations if needed;
+    \item \textbf{settings.gradle.kts} - Defines the project's structure and modules it contains.
 \end{itemize}
 
 In Gradle, tasks are the smallest unit of work that can be executed and are used to perform specific actions.
@@ -49,7 +48,7 @@ Some of the key tasks are:
 \begin{itemize}
     \item \textbf{Build}: Compiles and assembles the project;
     \item \textbf{AllTests}: Runs the test cases for all platforms.
-    To run platform-specific tests, use the \textit \textless Platform\textgreater Test task (e.g., \textit{jvmTest});
+    To run platform-specific tests, use the \texttt{<Platform>Test} task (e.g., \textit{jvmTest});
     \item \textbf{Check}: Performs various checks on the project, including running tests and performing additional operations (e.g., linting, code analysis);
     \item \textbf{Clean}: Deletes the build directory, allowing for a clean build (i.e., not using cached artifacts).
 \end{itemize}
@@ -62,9 +61,9 @@ Provided by the template, the project utilizes GitHub Actions~\cite{github-actio
 The configurations for GitHub Actions are located in the \textit{.github/workflows} folder, and include the following workflows:
 
 \begin{itemize}
-    \item \textit{gradle.yml} - Builds and tests the project using Gradle against some of the available platforms (e.g., Javascript was missing and was added manually).
-    Runs on push and pull request events to the default branch.
-    \item \textit{deploy.yml} - deploys the library artifacts to a repository in Maven Central, following a pre-defined authentication configuration.
+    \item \textbf{gradle.yml} - Builds and tests the project using Gradle against some of the available platforms (e.g., Javascript was missing and was added manually).
+    Runs on push and pull request events to the default branch;
+    \item \textbf{deploy.yml} - deploys the library artifacts to a repository in Maven Central, following a pre-defined authentication configuration.
 \end{itemize}
 
 \subsection{Folder Structure}\label{subsec:folder-structure}
@@ -92,22 +91,22 @@ Below is a brief description of each folder, with an emphasis on the \textit{src
             \item \textbf{androidMain/}: Contains the source code specific to the Android platform;
             \item And all of these module counterparts for the test code (e.g., \textit{commonTest, jvmTest, jsTest, etc}).
         \end{itemize}
-        \item \textbf{build.gradle.kts}: Defines the targets, dependencies, and additional configurations for the library.
+        \item \textbf{build.gradle.kts}: Defines the targets, dependencies, and additional configurations for the library;
     \end{itemize}
-    \item \textbf{build.gradle.kts}: The main build configuration file for the project, where the project's targets, dependencies, and additional configurations are defined.
+    \item \textbf{build.gradle.kts}: The main build configuration file for the project, where the project's modules common dependencies are defined;
     \item \textbf{settings.gradle.kts}: Configures the Gradle build settings for the project, including the root project name and module inclusion.
 \end{itemize}
 
 Based on the described template's project structure, the following project structure was adopted for developing a Kotlin Multiplatform library:
 
 \begin{itemize}
-    \item \textbf{\textless kmp\_package\_name\textgreater}: name of the Kotlin Multiplatform library in root directory;
+    \item \textbf{\texttt{<}kmp\_package\_name\texttt{>}}: name of the Kotlin Multiplatform library in root directory;
     \begin{itemize}
-        \item \textbf{apps}: defines the modules that will consume the KMP library (e.g., js-app, android-app)
+        \item \textbf{apps}: defines the modules that will consume the \textitKMP library (e.g.,\textttt{js-app}, \texttt{android-app});
         \item \textbf{lib/shared}: defines the library's code to be shared by the consuming modules;
         \begin{itemize}
-            \item \textbf{src} defines the target submodules of the library including their test counterparts (i.e., \textless Platform\textgreater Main, \textless Platform\textgreater Test);
-            \item \textbf{build.gradle.kts}: defines the library's dependencies, targets, and additional configurations;
+            \item \textbf{src} defines the target submodules of the library including their test counterparts (i.e., \texttt{<Platform>Main}, \texttt{<Platform>Test}).
+            \item \textbf{build.gradle.kts}: defines the library's dependencies, targets, and additional configurations.
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -125,7 +124,7 @@ However, it is sometimes necessary to create specific code for a given platform,
     This adapter allows communication with the common category code, in \textit{Kotlin}, from the native code of the \textit{target}, which can be defined in the \textit{Intermediate} or \textit{Specific} category.
 \end{itemize}
 
-To create specific code for a \textit{target}, the mechanism \textbf{\textit{expect/actual}}~\cite{kmp-expect-actual} is used.
+To create specific code for a \textit{target}, the mechanism \textit{expect/actual}~\cite{kmp-expect-actual} is used.
 This mechanism allows defining the code to be implemented in an abstracted way and its implementation, respectively.
 
 
@@ -134,7 +133,7 @@ This mechanism allows defining the code to be implemented in an abstracted way a
 The project supports the following targets:
 
 \begin{itemize}
-    \item \textbf{Jvm}: Allows running the code on the Java Virtual Machine;
+    \item \textbf{JVM}: Allows running the code on the Java Virtual Machine;
     \item \textbf{JavaScript}: Allows running the code in a browser or Node.js environment;
     \item \textbf{Android}: Allows running the code on Android devices.
     \item \textbf{Native}: Allows running the code on platforms that support Kotlin/Native, excluding macOS and iOS, because the lack of access to the necessary hardware for testing.
