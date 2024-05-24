@@ -63,10 +63,105 @@ Independent of the execution environment, the execution context is one of the fo
 
 \section{Ktor Integration}\label{sec:ktor-integration}
 
-talk about pipeline phase interception context
+Integration with Ktor was considered from the beginning of the project, because Ktor:
+\begin{itemize}
+    \item provides a flexible pipeline-based architecture, which allows for integration of custom behavior;
+    \item is an official JetBrains product;
+    \item is also a multiplatform framework, although server-side is limited to the JVM and Native targets~\cite{ktor-server-platforms}.
+\end{itemize}
 
+Additionally, integrating with another library or framework (beyond just Ktor) provided a real-world use case for the implemented mechanisms and presented a development exercise.
+The challenge was not only integrate the library with a third-party framework, but also ensure that the implemented mechanisms are well-equipped to handle different scenarios and environments without being dependent on a specific context (e.g., HTTP); and also provide extension points for additional features and customizations that only make sense in a specific context (e.g., retrying on server responses with specific status codes).
+
+\subsection{Plugin}\label{subsec:plugin}
+
+In Ktor, a plugin is a reusable component that can be installed in an application to extend its functionality.
+They represent a way to encapsulate common functionality (e.g., logging, authentication, serialization, etc.) and make it reusable across different applications.
+Plugins are installed in the application's pipeline, where they can intercept and modify the request and response processing flow, as the Figure~\ref{fig:ktor-server-architecture} demonstrates for the server side.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/03_ktor-server-architecture}
+    \caption{Ktor Server Architecture}
+    \label{fig:ktor-server-architecture}
+\end{figure}
+
+In the server side, as a request comes in, it goes through a series of steps~\cite{ktor-server-plugins}:
+
+\begin{boldenumerate}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
+    \item It is routed to the correct handler via the routing mechanism (which is also a plugin);
+    \item Before being handed off to the handler, it goes through one or more Plugins;
+    \item The handler (application logic) handles the request;
+    \item Before the response is sent to the client, it goes through one or more Plugins
+\end{boldenumerate}
+
+\subsection{Pipeline}\label{subsec:pipeline}
+
+A Pipeline, represented in Figure~\ref{fig:ktor-pipeline}, is a collection of zero or more interceptors, grouped in one or more ordered phases.
+Each interceptor can perform custom logic before and after processing a request.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/03_ktor-pipeline}
+    \caption{Ktor Pipeline Example}
+    \label{fig:ktor-pipeline}
+\end{figure}
+
+A plugin is also an interceptor, but an interceptor is not a plugin.
+While an interceptor is a function block that can be added to intercept a specific pipeline phase and perform custom logic; a plugin is a collection of zero or more interceptors mixed with external configuration and other logic (e.g., add more pipeline phases) in a single reusable component.
+
+Both client and server sides have pipelines, but they differ in terms of their phases and purposes.
+Tables~\ref{tab:ktor-server-pipelines} and~\ref{tab:ktor-client-pipelines} show the phases of the server and client pipelines, respectively.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Ktor Server Pipelines}
+    \label{tab:ktor-server-pipelines}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{6cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{Pipeline}  & \textbf{Description}                        & \textbf{Phases}                                                               \\ \hline
+        ApplicationSend    & Responsible for sending responses           & Before, Transform, Render, Content-Encoding, Transfer-Encoding, After, Engine \\ \hline
+        ApplicationReceive & Responsible for receiving requests          & Before, Transform, After                                                      \\ \hline
+        ApplicationCall    & Responsible for executing application calls & Setup, Monitoring, Plugins, Call, Fallback                                    \\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+    \centering
+    \caption{Ktor Client Pipelines}
+    \label{tab:ktor-client-pipelines}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{6cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{Pipeline} & \textbf{Description}                             & \textbf{Phases}                            \\ \hline
+        HttpRequest       & Processes all requests sent by the client        & Before, State, Transform, Render, Send     \\ \hline
+        HttpSend          & Used for send a request                          & Before, State, Monitoring, Engine, Receive \\ \hline
+        HttpReceive       & Used for receiving a response without processing & Before, State, After                       \\ \hline
+        HttpResponse      & Used for processing responses                    & Receive, Parse, Transform, State, After    \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Custom Plugins}\label{subsec:custom-plugins}
+
+Ktor provides a custom plugin API that allows developers to create their own plugins in both client and server sides.
+
+Since Ktor \texttt{2.0.0}, the custom plugin API has been simplified~\cite{ktor-server-custom-plugins, ktor-client-custom-plugins} and no longer requires an understanding of internal Ktor concepts, such as pipelines, phases, etc.
+Instead, developers have access to different stages of handling requests and responses using general handlers (e.g., \texttt{onCallReceive}, and \texttt{onCallRespond}), which intercept the related phases of the pipeline.
 
 \section{Development Roadmap}\label{sec:development-roadmap}
 
-Mechanism Model Implementation for a specific mechanism -> Tests -> All targets support -> Ktor plugin
-and repeat for each mechanism in a vertical manner.
+Originally, the project was planned to be developed in a horizontal manner, where all mechanisms would be implemented for all targets at the same time, tested, and then integrated with Ktor.
+
+However, due to the complexity of the mechanisms and the need to ensure that they are correctly implemented and tested
+in other contexts, the development strategy was changed to a vertical approach.
+
+For each mechanism, the following steps are taken:
+\begin{boldenumerate}[topsep=0pt,itemsep=0pt,partopsep=0pt, parsep=0pt]
+    \item \textbf{Mechanism Model Implementation}: Implement the Mechanism Model for a specific mechanism, including all of its components.
+    \item \textbf{Tests}: Write tests for the implemented Mechanism Model components.
+    \item \textbf{All Targets Support}: Ensure that the implemented Mechanism Model components work correctly for all targets.
+    \item \textbf{Ktor Plugin}: Implement the Ktor Plugin for the mechanism.
+    \item \textbf{Ktor Plugin Tests}: Write tests for the implemented Ktor Plugin.
+    Due to time constraints, unit tests were not conducted; however, integration tests~\cite{software-test-types} were performed using a real Ktor application.
+\end{boldenumerate}
