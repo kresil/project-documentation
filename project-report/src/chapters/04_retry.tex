@@ -11,16 +11,15 @@ These issues are often brief and resolve themselves within a short period, meani
 
 Without a retry mechanism, an application might treat such transient failures as critical, leading to unnecessary disruptions in service, increased latency, and a poor user experience.
 
-If an application detects a failure when it tries to send a request to a remote service, it can handle the failure using the following strategies~\cite{microsoft-retry-pattern}:
+If an application detects a failure when it tries to send a request to a remote service, for example, it can handle the failure using the following strategies~\cite{microsoft-retry-pattern}:
 
 \begin{itemize}
     \item \textbf{Cancel}: If the fault indicates that the failure isn't transient or is unlikely to be successful if repeated, the application should cancel the operation and report an exception (e.g., an authentication failure caused by providing invalid credentials is not likely to succeed no matter how many times it's attempted);
     \item \textbf{Retry}: If the specific fault reported is unusual or rare, it might have been caused by unusual circumstances (e.g., a transient network issue).
-    In this case, the application could retry the failing request again immediately because the same failure is unlikely to be repeated (i.e., no-delay retry);
-    \item Retry after delay.
-    If the fault is caused by one of the more commonplace connectivity or busy failures, the network or service might need a short period while the connectivity issues are corrected or the backlog of work is cleared.
-    The application should wait for a suitable time before retrying the request.
-    The amount of time to wait before retrying, depends on:
+    In this case, the application could retry the failing request again immediately because the same failure is unlikely to be repeated;
+    \item \textbf{Retry after delay}: If the fault is caused by one of the more commonplace connectivity or busy failures, the network or service might need a short period while the connectivity issues are corrected or the backlog of work is cleared.
+    The application should wait for a suitable time (wait duration) before retrying the request.
+    The amount of time to wait before retrying depends on:
     \begin{itemize}
         \item the type of failure and the probability that it'll be corrected during this time;
         \item the delay strategy used (e.g., constant, linear, exponential);
@@ -38,16 +37,57 @@ The retry delay strategy defines the amount of time the application should wait 
     The delay is calculated by multiplying the initial delay by the retry attempt number (e.g., initial delay=1s, retry attempt=4, result=[1, 2, 3, 4]);
     \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt, by using the exponential backoff algorithm~\cite{wiki:exponential-backoff}.
     Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., initial delay=1s, multiplier=2, retry attempt=4, result=[1, 2, 4, 8]);
+    \item \textbf{Custom Delay}: This strategy uses a custom function to calculate the delay duration based on the retry attempt number and the last exception caught (if any), allowing for more complex delay strategies (e.g., a delay that increases linearly for the first 3 attempts, then doubles for the next 3 attempts, and so on).
 \end{itemize}
 
 In both linear and exponential delay strategies, a maximum delay can be set to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
+
 Additionally, a \textit{jitter}~\cite{wiki:jitter} can be introduced to randomize the calculated delay duration.
 This randomization can help avoid synchronization between multiple clients that are retrying the same operation at the same time, commonly known as the thundering herd problem~\cite{wiki:thundering-herd-problem}, by spreading out the retries over a period of time.
 
+
 \section{Configuration}\label{sec:retry-configuration}
 
-- Table with configuration options (do not mention result mapper as it is in experimental phase)
-- TODO: mention default values and why they were chosen
+The retry mechanism can be configured using a dedicated configuration builder with the properties listed in Table~\ref{tab:retry-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \begin{tabular}{|l|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}        & \textbf{Default Value/Behaviour}                                       & \textbf{Description}                                                                            \\ \hline
+        \texttt{maxAttempts}            & \texttt{3}                                                             & The maximum number of attempts (including the initial call as the first attempt).               \\ \hline
+        \texttt{retryPredicate}         & \texttt{throwable -> true}                                             & Predicate to determine if the operation should be retried based on the caught throwable.        \\ \hline
+        \texttt{retryOnResultPredicate} & \texttt{result -> false}                                               & Predicate to determine if the operation should be retried based on the result of the operation. \\ \hline
+        \texttt{delayStrategy}          & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy for calculating delay between retries.                                             \\ \hline
+        \texttt{resultMapper}           & \texttt{Rethrow throwable if any or return result unmodified}          & Function to map the result or exception after retries are exhausted.                            \\ \hline
+    \end{tabular}
+    \caption{Configuration Properties for \texttt{RetryConfigBuilder}}
+    \label{tab:retry-config-builder}
+\end{table}
+
+The default configuration presented in Table~\ref{tab:retry-config-builder} can be customized
+by calling the respective builder methods.
+The values that compose the default configuration are the most common and recommended for most use cases, but they can be adjusted to better suit the application's needs.
+
+TODO: if resultmapper is green-lit, talk about it more here
+
+\subsection{Custom Delay Provider}\label{subsec:retry-custom-delay-provider}
+
+A custom delay provider can be used
+to implement a custom delay strategy that differs from the standard delay strategies (see Section~\ref{subsec:retry-delay-strategies}).
+
+A delay strategy determines the next wait time between retry attempts,
+while a delay provider executes the actual waiting period by pausing or blocking
+(dependends on the implementation) the process for the specified duration.
+This separation allows for more flexibility in the implementation of the delay strategy.
+
+For example, for testing purposes, the custom delay provider might be implemented to not actually delay using real time,
+but instead immediately continue the execution,
+and only keeping track of the time that would have been spent waiting (as virtual time).
+This can be useful for speeding up tests that involve retry mechanisms, as it allows for faster execution without actually waiting for the delay duration.
+
+A custom delay provider also allows maintaining external state or dependencies that affect the delay duration,
+which can't be achieved with the standard delay strategies.
 
 \section{Implementation Aspects}\label{sec:retry-implementation-aspects}
 - Describe what deviates from the Mechanism model
@@ -55,5 +95,6 @@ This randomization can help avoid synchronization between multiple clients that 
 \subsection{Execution Flow}\label{subsec:retry-execution-flow}
 
 - Describe the state machine and the possible transitions, use drawing in presentation
+
 
 \section{Ktor Integration}\label{sec:retry-ktor-integration}
