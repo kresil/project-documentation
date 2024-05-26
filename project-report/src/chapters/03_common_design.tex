@@ -120,6 +120,14 @@ Every mechanism implementation has two ways to register listeners for events:
 The implementation also provides a way to cancel all registered listeners, by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
 The cancellation of the registered listeners up to a given time, does not affect subsequent registrations.
 
+
+\section{Decoration}\label{sec:decoration}
+
+TODO: talk about decoration principle
+
+\subsection{Operation Types}\label{subsec:operation-types}
+
+
 \section{Ktor Integration}\label{sec:ktor-integration}
 
 Integration with Ktor was considered from the beginning of the project, because Ktor:
@@ -220,8 +228,8 @@ For each mechanism, the following steps are taken:
 \begin{boldenumerate}
     \item Implement the Mechanism Model for a specific mechanism, including all of its components;
     \item Write tests for the implemented mechanism;
-    \item Ensure that the implemented mechanism work correctly for all targets;
-    \item Implement the Ktor Plugin that uses the implemented mechanism;
+    \item Ensure that the implemented mechanism works correctly for all targets;
+    \item Implement the Ktor Plugin that uses the developed mechanism;
     \item Write tests for the implemented Ktor Plugin;
-    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor application;
+    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor application.
 \end{boldenumerate}
