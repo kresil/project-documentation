@@ -61,6 +61,7 @@ The retry mechanism can be configured using a dedicated configuration builder wi
     \centering
     \caption{Configuration Properties for \texttt{RetryConfigBuilder}}
     \label{tab:retry-config-builder}
+    \vspace{0.3cm}
     \begin{tabular}{|l|p{5cm}|p{6cm}|}
         \hline
         \textbf{Config Property}        & \textbf{Default Value/Behaviour}                                       & \textbf{Description}                                                                            \\ \hline
@@ -124,6 +125,7 @@ but still did not provide a way to modify the result of the underlying operation
 To provide even more flexibility, a result mapper was subsequently added to the configuration.
 This mapper enables customized handling of the result or exception once the retry mechanism could not be used any more,
 allowing for more complex scenarios to be properly managed while keeping the already established functionality intact.
+Additionally, the result mapper can be reconfigured per decoration.
 
 \subsection{Retry Context}\label{subsec:retry-context}
 
@@ -132,11 +134,9 @@ It maintains internal state information, such as the number of retry attempts an
 and has access to the configuration settings defined for the retry mechanism.
 Additionally, it emits events to potential listeners.
 
-In the later stages of development, the retry context was made available to the operation being retried.
-In order to maintain backward compatibility with the initial implementation
-(which allowed for method references~\cite{java-method-references} to be decorated),
-a new family of methods was introduced with a \texttt{Ctx} suffix.
-This enhancement allows the operation to access the context and potentially alter its behavior based on the state of the context, providing a higher level of flexibility and control over the retry process.
+In the later stages of development,
+the retry context was made available to the operation being retried (see Section~\ref{subsec:operation-context}),
+allowing it to access the context and potentially alter its behaviour based on its state.
 
 \subsubsection{Event Emission}\label{subsubsec:retry-context-event-emission}
 

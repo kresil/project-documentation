@@ -8,7 +8,7 @@ These aspects, turned components, form the foundation of the future mechanisms i
 
 The Mechanism Model is composed of the following components:
 \begin{itemize}
-    \item \textbf{Configuration}: Represents a set of policies that, in conjuction, define the mechanism's behavior (e.g., maximum number of retries, maximum wait duration, etc.);
+    \item \textbf{Configuration}: Represents a set of policies that, in conjuction, define the mechanism's behaviour (e.g., maximum number of retries, maximum wait duration, etc.);
     \item \textbf{Asynchronous Context}: Represents the mechanism's execution context, responsible for state management and event emission in an asynchronous environment;
     \item \textbf{State}: Represents the internal state of the mechanism;
     \item \textbf{Implementation}: Applies the configuration to the mechanism's execution context.
@@ -22,10 +22,10 @@ The Mechanism Model is composed of the following components:
     \item \textbf{Metrics}: The mechanism's implementation component is responsible for recording metrics related to the mechanism's execution (e.g., number of retries, number of recorded failures, etc.).
     These metrics can be used for monitoring and analysis purposes;
     \item \textbf{Decorator}: The decorator is an extension of the Implementation component.
-    It is based on Resilience4J~\cite{resilience4j} decorators (i.e., high-order functions), and provide a convenient way to wrap code blocks with the mechanism's behavior;
+    It is based on Resilience4J~\cite{resilience4j} decorators, and provide a convenient way to wrap code blocks with the mechanism's behaviour;
     \item \textbf{Ktor Plugin}: Responsible for the integration of the mechanism implementation with the Ktor pipeline.
     The Configuration component is also used to create a specific plugin configuration,
-    which can be used to extend the mechanism's behavior and provide additional features in an HTTP context.
+    which can be used to extend the mechanism's behaviour and provide additional features in an HTTP context.
 \end{itemize}
 
 \begin{figure}[!htb]
@@ -110,35 +110,73 @@ Flows differ from Sequences~\cite{kotlin-sequences} in that they are used for ha
 All events in a mechanism are emitted using a hot Flow with no buffer, which means that, if there are no collectors (listeners) for the events, they are essentially lost (not recorded).
 As such, a listener must be registered before the event is emitted, in order to receive it.
 
-Every mechanism implementation has two ways to register listeners for events:
+Each mechanism implementation has two ways to register listeners for events:
 
 \begin{itemize}
-    \item \textbf{onEvent}: Registers a listener to receive all events emitted by the mechanism;
-    \item \textbf{on\texttt{<}SpecificEvent\texttt{>}}: Registers a listener to receive only a specific type of event emitted by the mechanism.
+    \item Receive all events emitted by the mechanism;
+    \item Receive only a specific type of event emitted by the mechanism.
 \end{itemize}
 
 The implementation also provides a way to cancel all registered listeners, by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
-The cancellation of the registered listeners up to a given time, does not affect subsequent registrations.
+The cancellation of the registered listeners up to a given time does not affect later registrations.
 
 
 \section{Decoration}\label{sec:decoration}
 
-TODO: talk about decoration principle
+In mathematics,
+function composition is an operation that takes two functions \textit{f} and \textit{g}, and produces a function \textit{h} = \textit{g} \textcircled{.} \textit{f} such that \textit{h}(\textit{x}) = \textit{g}(\textit{f}(\textit{x})).
+
+In functional programming, a high-order function~\cite{higher-order-functions} is a function
+that takes one or more functions as arguments and/or returns a function as its result.
+
+In the context of these mechanisms,
+a decorator is a high-order function that wraps an operation (e.g., method, function) with the behaviour of the mechanism.
+The decorator needs to abide by the decoration principle,
+which states that a decorator should not modify the operation's behaviour or its signature.
+For callers of the operation, the decorator should be transparent, meaning that the operation's behaviour should not change when the decorator is applied.
 
 \subsection{Operation Types}\label{subsec:operation-types}
+
+An operation represents a unit of work that can be decorated with the mechanism's behaviour (e.g., a function that makes an HTTP request).
+
+In early development stages, the mechanisms were designed to support only one type of operation:
+a function that takes no arguments and returns a value.
+But this design was too restrictive, as it did not allow for operations that receive additional arguments.
+To address this limitation, the operation types were redefined to support different scenarios:
+
+\begin{itemize}
+    \item \textbf{Supplier}: Accepts no arguments and produces a result.
+    Based on Java's Supplier functional interface~\cite{java-supplier};
+    \item \textbf{Function}: Accepts one argument and produces a result.
+    Based on Java's Function functional interface~\cite{java-function};
+    \item \textbf{BiFunction}: Accepts two arguments and produces a result.
+    Based on Java's BiFunction functional interface~\cite{java-bifunction}.
+\end{itemize}
+
+Since the operations were going to be used in potential asynchronous contexts,
+the operation types were redefined to be suspendable (i.e., representing potentially suspendable operations).
+
+\subsection{Operation Context}\label{subsec:operation-context}
+
+In later stages of development, it was considered to give the aforementioned operation types context-awareness,
+meaning that the operations would have access to the mechanism's execution context in an immutable state
+(i.e., for read-only purposes).
+
+As a result, and to maintain backwards compatibility with the existing operation types (which allowed for method references~\cite{java-method-references} to be decorated), a new family of operation types was created with a \texttt{Ctx} prefix (e.g., \texttt{CtxSupplier}).
+These new operation types receive the mechanism's execution context as an additional argument.
 
 
 \section{Ktor Integration}\label{sec:ktor-integration}
 
 Integration with Ktor was considered from the beginning of the project, because Ktor:
 \begin{itemize}
-    \item provides a flexible pipeline-based architecture, which allows for integration of custom behavior;
-    \item is an official JetBrains~\cite{jetbrains} product;
     \item is also a multiplatform framework, although server-side is limited to the JVM and Native targets~\cite{ktor-server-platforms}.
+    \item provides a flexible pipeline-based architecture, which allows for integration of custom behaviour;
+    \item is an official JetBrains~\cite{jetbrains} product;
 \end{itemize}
 
 Additionally, integrating with another library or framework (beyond just Ktor) provided a real-world use case for the implemented mechanisms and presented a development exercise.
-The challenge was not only integrate the library with a third-party framework, but also ensure that the implemented mechanisms are well-equipped to handle different scenarios and environments without being dependent on a specific context (e.g., HTTP); and also provide extension points for additional features and customizations that only make sense in a specific context (e.g., retrying on server responses with specific status codes).
+The challenge was not only integrate the library with a third-party framework, but also ensure that the implemented mechanisms are well-equipped to handle different scenarios and environments without being dependent on a specific context, and also provide extension points to be later used to add features and customizations that only make sense in a specific context (e.g., retrying on server responses with 5xx status codes).
 
 \subsection{Plugin}\label{subsec:plugin}
 
@@ -153,7 +191,7 @@ Plugins are installed in the application's pipeline, where they can intercept an
     \label{fig:ktor-server-architecture}
 \end{figure}
 
-In the server side, as a request comes in, it goes through a series of steps~\cite{ktor-server-plugins}:
+On the server side, as a request comes in, it goes through a series of steps~\cite{ktor-server-plugins}:
 
 \begin{boldenumerate}
     \item It is routed to the correct handler via the routing mechanism (which is also a plugin);
@@ -214,7 +252,7 @@ Tables~\ref{tab:ktor-server-pipelines} and~\ref{tab:ktor-client-pipelines} show 
 Ktor provides a custom plugin API that allows developers to create their own plugins in both client and server sides.
 
 Since Ktor \texttt{2.0.0}, the custom plugin API has been simplified~\cite{ktor-server-custom-plugins, ktor-client-custom-plugins} and no longer requires an understanding of internal Ktor concepts, such as pipelines, phases, etc.
-Instead, developers have access to different stages of handling requests and responses using general handlers (e.g., \texttt{onCallReceive}, and \texttt{onCallRespond}), which intercept the related phases of the pipeline.
+Instead, developers have access to different stages of handling requests and responses using general handlers (e.g., \texttt{onCallReceive}, \texttt{onCallRespond}), which intercept the related phases of the pipeline.
 
 
 \section{Development Roadmap}\label{sec:development-roadmap}

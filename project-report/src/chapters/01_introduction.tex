@@ -79,7 +79,11 @@ By providing access to these mechanisms in a multiplaform context, developers ca
 \subsection{Ktor}\label{subsec:ktor}
 Ktor~\cite{ktor} is a Kotlin Multiplatform framework designed for building asynchronous servers and clients, such as web applications and microservices.
 
-The framework already provides some of the aforementioned resilience mechanisms as plugins, that can installed in the underlying pipepile to intercept specific phases of the request/response cycle and apply the desired behavior (e.g., retrying a request in the client side~\cite{ktor-client-retry}, rate limiting the incoming requests in the server side~\cite{ktor-server-rate-limit}).
+The framework already provides some of the aforementioned resilience mechanisms as plugins,
+that can installed in the underlying pipepile
+to intercept specific phases of the request/response cycle and apply the desired behaviour
+(e.g., retrying a request in the client side~\cite{ktor-client-retry},
+rate limiting the incoming requests in the server side~\cite{ktor-server-rate-limit}).
 
 \subsection{Other Solutions}\label{subsec:other-solutions}
 
@@ -112,7 +116,8 @@ Polly was used as secondary source to explore alternative approaches and design 
 \subsubsection{Arrow Library}
 
 The Arrow library, which presents itself as the functional companion to Kotlin's standard library, focuses on functional programming and includes, among other modules, a resilience library.
-This library implements three of the most critical design pattern around resilience~\cite{arrow-resilience}: retry and repeat computations using a \textit{Schedule}, protect other services from being overloaded using a \textit{CircuitBreaker}, and implement transactional behavior in distributed systems in the form of a \textit{Saga}.
+
+The library implements three of the most critical design pattern around resilience~\cite{arrow-resilience}: retry and repeat computations using a \textit{Schedule}, protect other services from being overloaded using a \textit{CircuitBreaker}, and implement transactional behaviour in distributed systems in the form of a \textit{Saga}.
 
 
 \section{Document Structure}\label{sec:document-structure}
