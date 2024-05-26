@@ -12,7 +12,7 @@ These issues are often brief and resolve themselves within a short period, meani
 Without a retry mechanism, an application might treat such transient failures as critical,
 leading to unnecessary disruptions in service, increased latency, and a poor user experience.
 
-When an application detects a failure (e.g., when sending a request to a remote service), it can handle the failure using the following strategies~\cite{microsoft-retry-pattern}:
+When an application detects a failure (e.g., when sending a request to a remote service), it can handle it using the following strategies~\cite{microsoft-retry-pattern}:
 
 \begin{itemize}
     \item \textbf{Cancel}: If the fault indicates that the failure isn't transient or is unlikely to be successful if repeated, the application should cancel the operation and report an exception (e.g., an authentication failure caused by providing invalid credentials is not likely to succeed no matter how many times it's attempted);
@@ -180,3 +180,54 @@ This description can be visualized in the retry mechanism execution flow, as ill
 
 
 \section{Ktor Integration}\label{sec:retry-ktor-integration}
+
+The retry mechanism was integrated with Ktor
+by implementing a custom plugin that can be added to the application's Ktor pipeline,
+using the implemented retry mechanism.
+
+\subsection{Plugin Implementation}\label{subsec:request-retry-plugin}
+
+The plugin was designed for Ktor clients to enable automatic retries for HTTP requests.
+It intercepts the sending phase of a request,
+applying configurable retry logic based on conditions such as response status or exceptions.
+
+Before retrying a request,
+the plugin copies the original request and propagates its completion state to the copy,
+ensuring completion synchronization between the original and the retry request (e.g., if the original request is cancelled, the retry request is also cancelled).
+
+The plugin allows for two levels of configuration:
+
+\begin{itemize}
+    \item \textbf{Global Configuration}: The configuration is set during the plugin installation and applies to all requests made by the client;
+    \item \textbf{Per-Request Customization}: The configuration can be overridden for a specific request, allowing for more fine-grained control over the retry logic (e.g., disabling the retry mechanism for a specific request).
+\end{itemize}
+
+A listener to log all events emitted by the retry context is also enabled, which cancels its subscription when the request is completed.
+
+\subsection{Configuration}\label{subsec:retry-ktor-configuration}
+
+The retry Ktor plugin can be configured by providing a configuration builder with the properties listed in Table~\ref{tab:retry-ktor-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{RetryPluginConfigBuilder}}
+    \label{tab:retry-ktor-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}           & \textbf{Default Value/Behaviour}                                                    & \textbf{Description}                                                                                   \\ \hline
+        \texttt{maxAttempts}               & \texttt{3}                                                                          & The maximum number of attempts (including the initial call as the first attempt).                      \\ \hline
+        \texttt{retryOnExceptionPredicate} & \texttt{throwable -> true}                                                          & Predicate to determine if the operation should be retried based on the caught throwable.               \\ \hline
+        \texttt{delayStrategy}             & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy for calculating delay between retries.                                             \\ \hline
+        \texttt{retryOnCallPredicate}      & \texttt{(request, response) -> retries if a 5xx response is received from a server} & Predicate to determine if an HTTP call should be retried based on the respective request and response. \\ \hline
+        \texttt{modifyRequestOnRetry}      & \texttt{(requestBuilder, attempt) -> no-operation} & Callback to modify the request between retries (e.g., add a header with the current attempt number). \\ \hline
+    \end{tabular}
+\end{table}
+
+Additionally, methods relevant to an HTTP context were added to the configuration builder to simplify the configuration process:
+
+\begin{itemize}
+    \item \texttt{retryOnServerErrors}: Retries the HTTP call if the response status code is in the range: 500-599;
+    \item \texttt{retryOnServerErrorsIfIdempotent}: Similar to \texttt{retryOnServerErrors}, but only retries if the request method is idempotent~\cite{idempotent-http-method} (e.g., \texttt{GET, PUT, DELETE});
+    \item \texttt{retryOnTimeout}: Retries the HTTP call if the exception thrown is a timeout exception (e.g., connection timeout exceeded).
+\end{itemize}
