@@ -17,12 +17,12 @@ The Mechanism Model is composed of the following components:
     The registry allows access to mechanism implementations throughout the application and enables the reuse of configurations to create new mechanisms;
     \item \textbf{Events}: Both the Asynchronous Context and Registry components are responsible for emitting events.
     The Asynchronous Context component emits events related to the mechanism's execution, such as internal state transition changes.
-    The Registry component emits events related to \textit{CRUD}~\cite{wiki:crud-operations} operations performed in the registry.
+    The Registry component emits events related to \textit{CRUD} operations performed in the registry.
     These events can be used for various purposes, such as logging and monitoring;
     \item \textbf{Metrics}: The mechanism's implementation component is responsible for recording metrics related to the mechanism's execution (e.g., number of retries, number of recorded failures, etc.).
     These metrics can be used for monitoring and analysis purposes;
     \item \textbf{Decorator}: The decorator is an extension of the Implementation component.
-    It is based on Resilience4J~\cite{resilience4j} decorators, and provide a convenient way to wrap code blocks with the mechanism's behaviour;
+    It is based on Resilience4J~\cite{resilience4j} decorators, and provides a convenient way to wrap code blocks with the mechanism's behaviour;
     \item \textbf{Ktor Plugin}: Responsible for the integration of the mechanism implementation with the Ktor pipeline.
     The Configuration component is also used to create a specific plugin configuration,
     which can be used to extend the mechanism's behaviour and provide additional features in an HTTP context.
@@ -37,11 +37,11 @@ The Mechanism Model is composed of the following components:
 
 \subsection{Configuration Design}\label{subsec:configuration-design}
 
-Since the start of the project, the Configuration component was designed to use the builder pattern~\cite{wiki:builder-pattern}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
+Since the start of the project, the Configuration component has been designed to use the builder pattern~\cite{effective-java}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
 However, this initial implementation had a limitation: it was not possible to override a configuration object (i.e., create a new configuration object based on an existing one, and only modify specific properties while keeping the rest of the properties unchanged).
 
-
-To address this limitation, the Configuration component, particularly its builder, was redesigned to always start with a base configuration object.
+To address this limitation, the Configuration component, particularly its builder,
+was redesigned to always be constructed with a base configuration object.
 This redesign enables incremental configuration, following a pattern where a configuration object is continually modified until the desired configuration is achieved.
 
 The configuration process is as follows:
@@ -71,20 +71,26 @@ Independent of the execution environment, synchronous or asynchronous, the mecha
 
 Since the mechanisms are designed to be cross-platform, the execution context must be flexible and support asynchronous operations, particularly for JavaScript, one of the supported targets (see Section~\ref{sec:supported-targets}), which is single-threaded and requires asynchronous (non-blocking) operations.
 
-In Kotlin, asynchronous operations are typically handled using Kotlin Coroutines~\cite{kotlin-coroutines}, which provide a way to write asynchronous code in a sequential manner, leveraging the concept of suspending functions.
+In Kotlin, asynchronous operations are typically handled using Kotlin Coroutines~\cite{kotlin-coroutines},
+which provide a way to write asynchronous code in a sequential manner,
+leveraging the concept of suspending functions implemented using contination passing style (CPS)~\cite{continuation-passing-style}.
 
 \subsubsection{Thread}\label{subsubsec:thread}
 
-In computer science, a thread~\cite{wiki:thread} of execution is the smallest sequence of programmed instructions that can be managed independently by a scheduler, which is typically a part of the operating system.
+In computer science, a thread~\cite{java-thread} of execution is the smallest sequence of programmed instructions that can be managed independently by a scheduler, which is typically a part of the operating system.
 
-In addition to being managed independently by an operating system's scheduler, threads are fundamental units of execution within a process~\cite{wiki:process-computing}
+In addition to being managed independently by an operating system's scheduler, threads are fundamental units of execution within a process.
 They enable concurrent execution of tasks, allowing a program to perform multiple operations simultaneously.
 
 \subsubsection{Kotlin Coroutines}\label{subsubsec:kotlin-coroutines}
 
-A coroutine is an instance of a potentially suspendable computation, which can be suspended and resumed at a later time.
-It is conceptually similar to a thread, in the sense that it takes a block of code to run that works concurrently with the rest of the code~\cite{kotlin-coroutines}.
-However, a coroutine is not bound to any particular thread, as it may suspend its execution in one thread and resume in another one.
+A coroutine is an instance of a potentially suspendable computation,
+which can be suspended and resumed at a later time (uses a state machine to manage its execution).
+It is conceptually similar to a thread,
+in the sense that it takes a block of code
+to run that works concurrently with the rest of the code~\cite{kotlin-coroutines}.
+However, a coroutine is not bound to any particular thread,
+as it may suspend its execution in one thread and resume in another one.
 
 A suspended coroutine does not block the underlying thread, freeing it to run other coroutines or perform other tasks.
 In a thread, only one coroutine can run at a given time.

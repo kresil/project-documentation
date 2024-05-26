@@ -1,5 +1,6 @@
 \chapter{Retry}\label{ch:retry}
 
+
 \section{Introduction}\label{sec:retry-context}
 
 The retry mechanism is a resilience pattern that allows an application to handle transient failures when it tries to connect to a service or network resource.
@@ -41,16 +42,18 @@ The retry delay strategy defines the amount of time the application should wait 
     \item \textbf{No Delay}: This strategy does not introduce any delay between retries;
     \item \textbf{Constant Delay}: Introduces a fixed, constant delay between each retry attempt;
     \item \textbf{Linear Delay}: Increases the delay duration linearly with each retry attempt.
-    The delay is calculated by multiplying the initial delay by the retry attempt number (e.g., initial delay=1s, retry attempt=4, result=[1, 2, 3, 4]);
-    \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt, by using the exponential backoff algorithm~\cite{wiki:exponential-backoff}.
-    Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., initial delay=1s, multiplier=2, retry attempt=4, result=[1, 2, 4, 8]);
+    The delay is calculated by multiplying the initial delay by the retry attempt number (e.g., \texttt{initial delay=1s, retry attempt=4, result=[1, 2, 3, 4]});
+    \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt, by using the \textit{exponential backoff algorithm}.
+    Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., \texttt{initial delay=1s, multiplier=2, retry attempt=4, result=[1, 2, 4, 8]});
     \item \textbf{Custom Delay}: This strategy uses a custom function to calculate the delay duration based on the retry attempt number and the last exception caught (if any), allowing for more complex delay strategies (e.g., a delay that increases linearly for the first 3 attempts, then doubles for the next 3 attempts, and so on).
 \end{itemize}
 
 In both linear and exponential delay strategies, a maximum delay can be set to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
 
-Additionally, a \textit{jitter}~\cite{wiki:jitter} can be introduced to randomize the calculated delay duration.
-This randomization can help avoid synchronization between multiple clients that are retrying the same operation at the same time, commonly known as the thundering herd problem~\cite{wiki:thundering-herd-problem}, by spreading out the retries over a period of time.
+Additionally, a \textit{jitter} can be introduced to randomize the calculated delay duration.
+This randomization can help
+avoid synchronization between multiple clients that are retrying the same operation at the same time,
+commonly known as the \textit{thundering herd problem}, by spreading out the retries over a period of time.
 
 
 \section{Configuration}\label{sec:retry-configuration}
@@ -124,7 +127,7 @@ but still did not provide a way to modify the result of the underlying operation
 
 To provide even more flexibility, a result mapper was subsequently added to the configuration.
 This mapper enables customized handling of the result or exception once the retry mechanism could not be used any more,
-allowing for more complex scenarios to be properly managed while keeping the already established functionality intact.
+allowing for more complex scenarios to be managed while keeping the already established functionality intact.
 Additionally, the result mapper can be reconfigured per decoration.
 
 \subsection{Retry Context}\label{subsec:retry-context}
@@ -174,5 +177,6 @@ This description can be visualized in the retry mechanism execution flow, as ill
     \caption{Retry Mechanism Execution Flow}
     \label{fig:retry-execution-flow}
 \end{figure}
+
 
 \section{Ktor Integration}\label{sec:retry-ktor-integration}
