@@ -37,7 +37,7 @@ The Mechanism Model is composed of the following components:
 
 \subsection{Configuration Design}\label{subsec:configuration-design}
 
-Since the start of the project, the Configuration component has been designed to use the builder pattern~\cite{effective-java}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
+Since the start of the project, the Configuration component has been designed to use the builder creational pattern~\cite{effective-java, design-patterns}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
 However, this initial implementation had a limitation: it was not possible to override a configuration object (i.e., create a new configuration object based on an existing one, and only modify specific properties while keeping the rest of the properties unchanged).
 
 To address this limitation, the Configuration component, particularly its builder,
@@ -100,20 +100,26 @@ Structured concurrency is a programming paradigm that enforces a hierarchical st
 
 \subsection{Event Publishing}\label{subsec:event-publishing}
 
-Since the execution context is asynchronous, the events must be published asynchronously.
-To achieve this, the Kotlin Coroutines' asynchronous primitive Flow~\cite{kotlin-flow} was used to emit events.
+Since the execution context is asynchronous, the events must be also published asynchronously.
+To achieve this, the Kotlin Coroutines' asynchronous primitive Flow~\cite{kotlin-flow} was used to emit such events.
 
 \subsubsection{Flow}\label{subsubsec:flow}
 
-A Flow~\cite{kotlin-flow} is a cold asynchronous stream that sequentially emits values and completes normally or with an exception.
+A Flow in Kotlin is a type of asynchronous data stream that can emit multiple values sequentially.
+It is typically cold, meaning it starts emitting values only when collected,
+ensuring that each collector receives the full sequence of values from the start.
+In contrast, hot streams which emit values regardless of active collectors,
+allowing multiple consumers
+to observe ongoing data emissions~\cite{android-stateflow-sharedflow, kotlin-flow}.
 
-A cold stream starts emitting values only when it is collected, and each collector receives all the values from the beginning; this is in contrast to hot streams, which emit values regardless of whether they are collected or not.
+Flows are distinct from Sequences~\cite{kotlin-sequences} in Kotlin.
+While both can handle multiple values over time,
+Flows are designed for asynchronous operations and do not block the calling thread when collecting values.
+Sequences, however, are synchronous and computed on demand (lazy), blocking the calling thread during value computation.
 
-Flows differ from Sequences~\cite{kotlin-sequences} in that they are used for handling asynchronous streams of data that can emit multiple values over time, while sequences are used for handling synchronous streams of data that are computed on demand (lazy) and can only produce values once.
+\subsubsection{Implementation}\label{subsubsec:event-publishing-implementation}
 
-\subsubsection{Implementation}
-
-All events in a mechanism are emitted using a hot Flow with no buffer, which means that, if there are no collectors (listeners) for the events, they are essentially lost (not recorded).
+In a mechanism, events are emitted using a hot Flow with no buffer, which means that, if there are no collectors (listeners) for the events, they are essentially lost (not recorded).
 As such, a listener must be registered before the event is emitted, in order to receive it.
 
 Each mechanism implementation has two ways to register listeners for events:
@@ -123,9 +129,8 @@ Each mechanism implementation has two ways to register listeners for events:
     \item Receive only a specific type of event emitted by the mechanism.
 \end{itemize}
 
-The implementation also provides a way to cancel all registered listeners, by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
-The cancellation of the registered listeners up to a given time does not affect later registrations.
-
+The implementation also provides a way to cancel all registered listeners by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
+However, the cancellation of the registered listeners up to a given time does not affect later registrations.
 
 \section{Decoration}\label{sec:decoration}
 
@@ -135,11 +140,15 @@ function composition is an operation that takes two functions \textit{f} and \te
 In functional programming, a high-order function~\cite{higher-order-functions} is a function
 that takes one or more functions as arguments and/or returns a function as its result.
 
+A decorator is a structural design pattern
+that attaches additional responsibilities to an object dynamically using aggregation/composition to provide a flexible alternative to subclassing for extending functionality~\cite{design-patterns}.
+
 In the context of these mechanisms,
-a decorator is a high-order function that wraps an operation (e.g., method, function) with the behaviour of the mechanism.
+a decorator is a high-order function that wraps an operation
+(e.g., method, function) with the behaviour of the mechanism.
 The decorator needs to abide by the decoration principle,
-which states that a decorator should not modify the operation's behaviour or its signature.
-For callers of the operation, the decorator should be transparent, meaning that the operation's behaviour should not change when the decorator is applied.
+which states that a decorator should not modify the operation's signature (i.e., name, parameters and return value), only alter its behaviour.
+For callers of the operation, the decorator should be transparent (as if the operation was not decorated).
 
 \subsection{Operation Types}\label{subsec:operation-types}
 
@@ -174,15 +183,9 @@ These new operation types receive the mechanism's execution context as an additi
 
 \section{Ktor Integration}\label{sec:ktor-integration}
 
-Integration with Ktor was considered from the beginning of the project, because Ktor:
-\begin{itemize}
-    \item is also a multiplatform framework, although server-side is limited to the JVM and Native targets~\cite{ktor-server-platforms}.
-    \item provides a flexible pipeline-based architecture, which allows for integration of custom behaviour;
-    \item is an official JetBrains~\cite{jetbrains} product;
-\end{itemize}
-
-Additionally, integrating with another library or framework (beyond just Ktor) provided a real-world use case for the implemented mechanisms and presented a development exercise.
-The challenge was not only integrate the library with a third-party framework, but also ensure that the implemented mechanisms are well-equipped to handle different scenarios and environments without being dependent on a specific context, and also provide extension points to be later used to add features and customizations that only make sense in a specific context (e.g., retrying on server responses with 5xx status codes).
+Integration with Ktor presented an opportunity to apply the mechanisms in a real-world scenario
+and validate their design and implementation.
+But before integrating the mechanisms with Ktor, it is necessary to understand Ktor's architecture and how to extend its functionality using plugins.
 
 \subsection{Plugin}\label{subsec:plugin}
 
@@ -219,9 +222,11 @@ Each interceptor can perform custom logic before and after processing a request.
 \end{figure}
 
 A plugin is also an interceptor, but an interceptor is not a plugin.
-While an interceptor is a function block that can be added to intercept a specific pipeline phase and perform custom logic; a plugin is a collection of zero or more interceptors mixed with external configuration and other logic (e.g., add more pipeline phases) in a single reusable component.
+An interceptor is a function block that can be added to intercept a specific pipeline phase and perform custom logic;
+a plugin is a collection of zero or more interceptors mixed with external configuration and other logic
+(e.g., add more pipeline phases) in a single reusable component.
 
-Both client and server sides have pipelines, but they differ in terms of their phases and purposes.
+Both client and server sides have pipelines, but they differ in number, phases, and purpose.
 Tables~\ref{tab:ktor-server-pipelines} and~\ref{tab:ktor-client-pipelines} show the phases of the server and client pipelines, respectively.
 
 \begin{table}[!htb]
@@ -268,12 +273,12 @@ Originally, the project was planned to be developed in a horizontal manner, wher
 However, due to the complexity of the mechanisms and the need to ensure that they are correctly implemented and tested
 in other contexts, the development strategy was changed to a vertical approach.
 
-For each mechanism, the following steps are taken:
+For each mechanism, the following steps were taken:
 \begin{boldenumerate}
     \item Implement the Mechanism Model for a specific mechanism, including all of its components;
     \item Write tests for the implemented mechanism;
     \item Ensure that the implemented mechanism works correctly for all targets;
     \item Implement the Ktor Plugin that uses the developed mechanism;
     \item Write tests for the implemented Ktor Plugin;
-    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor application.
+    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor use case application;
 \end{boldenumerate}
