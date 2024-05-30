@@ -1,10 +1,15 @@
 \chapter{Common Design and Implementation Strategy}\label{ch:design-implementation}
 
+This chapter outlines the shared design principles of the implemented mechanisms and the development approach used to integrate them with Ktor.
+A comprehensive review and analysis of existing mechanism implementations~\ref{sec:related-work} were conducted
+to identify common design elements and relevant features that could be incorporated into the design of the new mechanisms.
+
 
 \section{Mechanism Model}\label{sec:mechanism-model}
 
-After a thorough research and analysis of the available mechanisms implementations, it was identified the common design aspects that are shared among them.
-These aspects, turned components, form the foundation of the future mechanisms implementations and are represented in the Mechanism Model, as shown in Figure~\ref{fig:mechanism-model}.
+The common design elements identified in the existing mechanisms were used
+to define a model that represents the mechanisms' core components.
+These components form the foundation of all future mechanism's implementation, and are represented in the Mechanism Model, as shown in Figure~\ref{fig:mechanism-model}.
 
 The Mechanism Model is composed of the following components:
 \begin{itemize}
@@ -275,10 +280,10 @@ in other contexts, the development strategy was changed to a vertical approach.
 
 For each mechanism, the following steps were taken:
 \begin{boldenumerate}
-    \item Implement the Mechanism Model for a specific mechanism, including all of its components;
+    \item Implement the Mechanism Model, including all its components and any additional components required by the mechanism;
     \item Write tests for the implemented mechanism;
-    \item Ensure that the implemented mechanism works correctly for all targets;
-    \item Implement the Ktor Plugin that uses the developed mechanism;
-    \item Write tests for the implemented Ktor Plugin;
+    \item Ensure that the mechanism works correctly for all targets;
+    \item Implement the Ktor Plugin that uses the mechanism;
+    \item Write tests for the Ktor Plugin;
     Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor use case application;
 \end{boldenumerate}

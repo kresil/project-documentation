@@ -1,13 +1,22 @@
 \chapter{Retry}\label{ch:retry}
 
+This chapter describes the retry mechanism, its functionality, available configuration and how it was implemented in both the library and as a plugin for the Ktor framework integration.
+
 
 \section{Introduction}\label{sec:retry-context}
 
-The retry mechanism is a resilience pattern that allows an application to handle transient failures when it tries to connect to a service or network resource.
-By transparently retrying a failed operation, the application can improve its stability and availability~\cite{microsoft-retry-pattern}.
+The retry mechanism is a \textit{\enquote{resilience pattern that allows an application to handle transient failures when it tries to connect to a service or network resource.
+By transparently retrying a failed operation, the application can improve its stability and availability}}~\cite{microsoft-retry-pattern}.
 
-This mechanism, as illustrated in Figure~\ref{fig:retry-execution-example}, is particularly useful when the application is interacting with services that are prone to temporary failures, such as network issues, temporary unavailability of services, or timeouts when services are overloaded.
-These issues are often brief and resolve themselves within a short period, meaning that retrying the operation after a short delay can often succeed (e.g., a call to a service that is temporarily overloaded might succeed if retried after a few seconds)~\cite{microsoft-retry-pattern}.
+The retry mechanism, as illustrated in Figure~\ref{fig:retry-execution-example},
+is particularly useful when the application is interacting with services that are prone to temporary
+(transient) failures, such as network issues,
+temporary unavailability of services, or timeouts when services are overloaded.
+These issues are often brief and resolve themselves within a short period,
+meaning that retrying the operation after a short delay can often succeed
+(e.g.,
+a call to a service that is temporarily overloaded might succeed
+if retried after a few seconds)~\cite{microsoft-retry-pattern}.
 
 Without a retry mechanism, an application might treat such transient failures as critical,
 leading to unnecessary disruptions in service, increased latency, and a poor user experience.
@@ -42,18 +51,18 @@ The retry delay strategy defines the amount of time the application should wait 
     \item \textbf{No Delay}: This strategy does not introduce any delay between retries;
     \item \textbf{Constant Delay}: Introduces a fixed, constant delay between each retry attempt;
     \item \textbf{Linear Delay}: Increases the delay duration linearly with each retry attempt.
-    The delay is calculated by multiplying the initial delay by the retry attempt number (e.g., \texttt{initial delay=1s, retry attempt=4, result=[1, 2, 3, 4]});
+    The delay is calculated by multiplying the initial delay by the retry attempt number
+    (e.g., \texttt{initial delay=1s, attempts=4, result=[1, 2, 3, 4]});
     \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt, by using the \textit{exponential backoff algorithm}.
-    Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., \texttt{initial delay=1s, multiplier=2, retry attempt=4, result=[1, 2, 4, 8]});
-    \item \textbf{Custom Delay}: This strategy uses a custom function to calculate the delay duration based on the retry attempt number and the last exception caught (if any), allowing for more complex delay strategies (e.g., a delay that increases linearly for the first 3 attempts, then doubles for the next 3 attempts, and so on).
+    Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., \texttt{initial delay=1s, multiplier=2, attempts=4, result=[1, 2, 4, 8]});
+    \item \textbf{Custom Delay}: This strategy uses a custom function to calculate the delay duration based on the retry attempt number and the last exception caught (if any), allowing for more complex delay strategies (e.g., a delay that increases linearly for the first 3 attempts, then exponentially for the next attempts).
 \end{itemize}
 
 In both linear and exponential delay strategies, a maximum delay can be set to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
 
-Additionally, a \textit{jitter} can be introduced to randomize the calculated delay duration.
-This randomization can help
-avoid synchronization between multiple clients that are retrying the same operation at the same time,
-commonly known as the \textit{thundering herd problem}, by spreading out the retries over a period of time.
+Additionally, introducing a \textit{jitter} can help mitigate the \textit{thundering herd problem} by randomizing the calculated delay duration.
+This randomization prevents multiple clients from synchronizing their retries of the same operation,
+thereby spreading out the retries over a period of time.
 
 
 \section{Configuration}\label{sec:retry-configuration}

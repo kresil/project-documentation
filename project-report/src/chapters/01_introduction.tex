@@ -58,16 +58,16 @@ These mechanisms can be further categorized based on when they are activated:
 
 \subsection{Technologies}\label{subsec:technologies}
 
-Kotlin Multiplatform is a technology that allows developers to share code across multiple platforms,
+Kotlin Multiplatform~\cite{kotlin-multiplatform} is a technology that allows developers to share code across multiple platforms,
 such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
 This type of technology is particularly useful for developers
 who want to build services that run on multiple platforms,
-without having to write potentially equivalent platform-specific code.
+without having to write potentially equivalent platform-specific code, maintaining a reusable codebase.
 
-In 2019, Google announced it as the official language for Android development in~\cite{google-android-kotlin},
+In 2019, Google announced Kotlin as the official language for Android development in~\cite{google-android-kotlin},
 and more recently,
 official support for Android development with Kotlin Multiplatform~\cite{android-kotlin-multiplatform, google-kotlin-multiplatform}.
-This recognition strengthens the importance and interest of the technology in the software development community.
+This recognition further solidified Kotlin's Multiplatform as a viable technology for building multiplatform applications.
 
 As a recent technology that is still evolving,
 and only reached stable status late last year~\cite{kotlin-multiplatform-stable},
@@ -170,7 +170,7 @@ This document is structured as follows:
 \begin{itemize}
     \item \textbf{Chapter 2 - Kotlin Multiplatform}: Provides an overview of the Kotlin Multiplatform technology, its architecture, and how it can be used to share code across multiple platforms; Additionally, it describes the template used, the adopted project structure, and how to run tests in a multiplatform context;
     \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: Describes the design and implementation aspects that are common to all the resilience mechanisms; Additionally, it describes the Ktor framework and how it was used in the project;
-    \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration, how it was implemented in both the library and as plugin for the Ktor framework integration;
+    \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration, how it was implemented in both the library and as a plugin for the Ktor framework integration;
     \item \textbf{Chapter 5 - Circuit Breaker}: Same as the previous chapter, but for the Circuit Breaker mechanism;
     \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project in a conclusion format and ends with future work considerations;
 \end{itemize}
