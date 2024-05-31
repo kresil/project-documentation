@@ -111,14 +111,14 @@ which can't be achieved with the standard delay strategies.
 
 \section{Implementation Aspects}\label{sec:retry-implementation-aspects}
 
-TODO: Describe what deviates from the Mechanism model
-
 \subsection{Ignoring Exceptions}\label{subsec:retry-ignoring-exceptions}
 
 The idea of ignoring exceptions that shouldn't trigger a retry was initially considered,
 by adding an extra configuration property (as offered by Resilience4j~\cite{resilience4j-retry}).
 However, it was decided
 that the retry predicate should be the only policy for determining if an operation should be retried based on the caught exception.
+
+The same idea was applied to the result predicate, which determines if the operation should be retried based on the result of the operation.
 
 \subsection{Result Mapper}\label{subsec:retry-result-mapper}
 
@@ -137,7 +137,7 @@ but still did not provide a way to modify the result of the underlying operation
 To provide even more flexibility, a result mapper was subsequently added to the configuration.
 This mapper enables customized handling of the result or exception once the retry mechanism could not be used any more,
 allowing for more complex scenarios to be managed while keeping the already established functionality intact.
-Additionally, the result mapper can be reconfigured per decoration.
+Additionally, the result mapper can be reconfigured per decoration or if ommited the default behaviour is applied.
 
 \subsection{Retry Context}\label{subsec:retry-context}
 
