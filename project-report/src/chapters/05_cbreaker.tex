@@ -14,7 +14,7 @@ without waiting for the fault to be fixed or wasting CPU cycles while it determi
 
 When an application calls a remote service, there's always a risk of failure
 (e.g., network issues, service unavailability, or timeouts).
-Some of these faults are temporary (transient) and resolve quickly,
+Some of these faults are temporary (transient) and resolved quickly,
 but others can be long-lasting and severe (e.g., a complete loss of connectivity, complete failure of a service).
 
 Moreover, if a service is under heavy-load, a failure in one part of the system might lead to cascading failures.
@@ -39,7 +39,8 @@ if the circuit breaker indicates that a failure is not transient~\cite{microsoft
 The circuit breaker mechanism works as an electrical circuit breaker~\cite{electrical-circuit-breaker},
 which is a safety device that automatically stops the flow of electric current in a circuit as a safety measure
 (e.g., to prevent a fire) when it detects a fault condition.
-In contrast to the electrical circuit breaker which needs a manual reset, the circuit breaker mechanism automatically resets itself after a predefined period of time.
+In contrast to the electrical circuit breaker which needs a manual reset,
+the circuit breaker mechanism automatically resets itself if the fault condition is resolved.
 
 The default implementation of the circuit breaker uses a state machine,
 as illustrated in Figure~\ref{fig:circuit-breaker-state-machine}, with the following states:
@@ -64,7 +65,7 @@ as illustrated in Figure~\ref{fig:circuit-breaker-state-machine}, with the follo
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.9\textwidth]{../figures/05_circuit-breaker-state-machine}
+    \includegraphics[width=0.7\textwidth]{../figures/05_cbreaker-states}
     \caption{Circuit Breaker State Machine.}
     \label{fig:circuit-breaker-state-machine}
 \end{figure}
@@ -82,6 +83,17 @@ Other implementations might have additional states (e.g., for maintenance, testi
 \end{itemize}
 
 \subsection{Operation Execution}\label{subsec:cbreaker-operation-execution}
+
+An operation protected by a circuit breaker is executed through the circuit breaker.
+When the operation is invoked, the circuit breaker checks its state to determine if the operation should be executed,
+as illustrated in Figure~\ref{fig:cbreaker-decoration}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.7\textwidth]{../figures/05_cbreaker-decoration}
+    \caption{Circuit Breaker Decoration.}
+    \label{fig:cbreaker-decoration}
+\end{figure}
 
 Regarding the underlying operation execution,
 it's important to note that the circuit breaker does not synchronize the received calls (i.e., it does not prevent multiple threads from invoking the operation concurrently when the circuit is in a state that allows the operation to be executed).
@@ -117,7 +129,6 @@ This approach ensures that the window size remains constant and that the circuit
 The retry mechanism can be configured
 using a dedicated configuration builder with the properties listed in Table~\ref{tab:cbreaker-config-builder}.
 
-
 \begin{table}[!htb]
     \centering
     \caption{Configuration Properties for \texttt{CircuitBreakerConfigBuilder}}
@@ -126,15 +137,17 @@ using a dedicated configuration builder with the properties listed in Table~\ref
     \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
         \hline
         \textbf{Config Property}          & \textbf{Default Value/Behaviour} & \textbf{Description}                                                                                                                                        \\ \hline
-        \texttt{failureRateThreshold} & \texttt{0.5} & The rate in percentage of calls
-        recorded as failures
-        that will trigger the circuit breaker to transition to the \texttt{Open} state if equaled or exceeded. \\ \hline
+        \texttt{failureRateThreshold}     & \texttt{0.5}                     & The rate in percentage of calls recorded as failures that will trigger the circuit breaker to transition to the \texttt{Open} state if equaled or exceeded. \\ \hline
         \texttt{permittedNumberOfCalls InHalfOpenState} & \texttt{10} & The number of calls
         allowed in the \texttt{HalfOpen} state. \\ \hline
-        \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning to the \texttt{Closed} state.
+        \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration
+        the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning back to the \texttt{Open} state.
         If set to \texttt{0}, it waits indefinitely until permitted calls are executed. \\ \hline
         \texttt{slidingWindow} & \texttt{SlidingWindow[ size=100, minimumThroughput=100, type=COUNT\_BASED]}
-        & Configures the sliding window used to record calls and calculate the failure rate. \\ \hline
+        & Configures the sliding window used to record calls and calculate the failure rate.
+        Minimum throughput is the minimum number of calls
+        that must be recorded before the failure rate is calculated.
+        \\ \hline
         \texttt{delayStrategyInOpenState} & \texttt{Constant[ delay=1m]}     & The strategy used to determine the duration the circuit breaker will remain in the \texttt{Open} state before transitioning to the \texttt{HalfOpen} state. \\ \hline
         \texttt{recordExceptionPredicate} & \texttt{throwable ->
             true} & Predicate
@@ -151,31 +164,70 @@ The values that compose the default configuration are the most common and recomm
 
 \section{Implementation Aspects}\label{sec:cbreaker-implementation-aspects}
 
+The circuit breaker mechanism was implemented with the following components:
+
+\begin{itemize}
+    \item \textbf{State Reducer} - Manages the circuit breaker state transitions inside mutual exclusion;
+    \item \textbf{Sliding Window} - Records the operation's execution results;
+    \item \textbf{Circuit Breaker} - Consults the state, executes operations and dispatches actions to the state reducer.
+\end{itemize}
+
+An example of the interaction between these components is illustrated in Figure~\ref{fig:circuit-breaker-execution-example},
+where the circuit breaker receives two orderly requests to execute an operation after working for some time:
+
+\begin{boldenumerate}
+    \item Client-A requests the operation to be executed.
+    \item The circuit breaker checks the state, in mutual exclusion, and sees that it is \texttt{Closed}, allowing the operation to be executed.
+    \item The operation is executed outside mutual exclusion.
+    \item The operation succeeds, and the result is recorded by the circuit breaker.
+    Even though the operation succeeded, the minimum throughput was reached, so the failure rate is calculated.
+    Since the failure rate equals the threshold, the circuit breaker transitions to the \texttt{Open} state.
+    \item Client-B requests the operation to be executed.
+    \item The circuit breaker checks the state, in mutual exclusion, and sees that it is \texttt{Open}, preventing the operation from being executed.
+    \item Client-B receives a predefined failure message.
+\end{boldenumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{../figures/05_cbreaker-execution-example}
+    \caption{Circuit Breaker Execution Example.}
+    \label{fig:circuit-breaker-execution-example}
+\end{figure}
+
 \subsection{State Reducer}\label{subsec:cbreaker-state-reducer}
 
-Originally,
-the state component of the circuit breaker was implemented using a regular finite state machine (FSM)~\cite{fsm}.
-But upon further analysis,
-it was decided that the state component should be designed to be potentially shared among multiple circuit breakers.
-Allowing multiple circuit breakers, with possibly different configurations,
-to share the same state component can be useful in scenarios
-where the circuit breakers are protecting related operations.
-Because in a system, if one or more related components fail, the others are likely to fail too.
+The circuit breaker was implemented using a state reducer pattern,
+in order to delegate the state transitions and mutual exclusion to a single component.
 
-The circuit breaker was implemented
-using a state reducer pattern~\cite{redux-state-reducer} to manage the state transitions.
-The state reducer pattern is a design pattern
-that allows the state of a system to be managed by a single reducer function that takes the current state and an action as input and returns the new state.
+The reducer pattern is a design pattern
+that allows the state of a system
+to be managed by a single reducer function
+that takes the current state and an action/event as input and returns the new state, as illustrated in Figure~\ref{fig:reducer-pattern}.
+It is a common pattern in the Redux~\cite{redux} state management library and the React~\cite{react-use-reducer} library,
+both widely used in the JavaScript ecosystem.
 
-This implementation was designed to be inline with the principles of the Redux~\cite{redux} state management library, which is widely used in the JavaScript ecosystem.
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.7\textwidth]{../figures/05_reducer-pattern}
+    \caption{State Reducer Pattern.}
+    \label{fig:reducer-pattern}
+\end{figure}
 
-TODO: talk about how only the reducer needs to use a lock (mutex) to ensure thread safety
-dispatch events to the reducer in a thread-safe manner
+The reducer pattern has the following characteristics:
 
-TODO: talk about internal events and how they are used to trigger state transitions
+\begin{itemize}
+    \item \textbf{State} - The state of the system is stored in a single immutable object and can be consulted as a snapshot of the system at any point in time.
+    \item \textbf{Action} - An event that potentially triggers a state transition.
+    \item \textbf{Dispatch} - A function that sends an action to the reducer to trigger a state transition.
+    \item \textbf{Reducer} - A function that takes the current state and an action as input and returns the new state.
+    Must be a pure function, meaning it must not have side effects and must return the same output for the same input.
+\end{itemize}
 
 \subsection{Sliding Window}\label{subsec:cbreaker-sliding-window}
 
-TODO: talk about ring buffer and other things that were to implement the count-based sliding window (time-based is not implemented yet)
+TODO: talk about ring buffer and other things that were needed to implement the count-based sliding window (time-based is not implemented yet)
+
 
 \section{Ktor Integration}\label{sec:cbreaker-ktor-integration}
+
+TODO
