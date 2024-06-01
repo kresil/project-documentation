@@ -3,7 +3,7 @@
 
 \section{Context}\label{sec:context}
 
-In the modern era, our reliance on digital services has grown exponentially, driving the need for these services to be highly reliable and available always.
+Our reliance on digital services has grown exponentially, driving the need for these services to be highly reliable and available always.
 Whether it's financial transactions, healthcare systems, or social media platforms, users expect uninterrupted access and seamless experiences.
 This expectation places significant pressure on the underlying infrastructure to handle failures gracefully and maintain service continuity.
 Achieving this level of reliability requires sophisticated mechanisms to manage and mitigate faults effectively.
@@ -24,13 +24,16 @@ Fault-tolerance and fault-resilience are key concepts in this context, and while
     \item {\textbf{Fault-Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.);
 \end{itemize}
 
-These distinctions are important, because it is possible to regard a fault-tolerant service as suffering \textit{no} downtime even if the machine it is running on crashes, whereas the potential data fault in a fault-resilient service counts toward downtime~\cite{fault-tolerance-vs-fault-resilience}.
+These distinctions are important,
+because it is possible to regard a fault-tolerant service
+as suffering \textit{no} downtime even if the machine it is running on crashes,
+whereas the potential data fault in a fault-resilient service counts toward downtime~\cite{fault-tolerance-vs-fault-resilience}.
 
 \subsection{Resilience Mechanisms}\label{subsec:resilience-mechanisms}
 
-Over the years, several resilience mechanisms have been developed to help implemented build more robust and reliable systems.
+Several resilience mechanisms have been developed to help build more robust and reliable systems.
 These mechanisms provide a set of tools and strategies to handle the inevitable occurrence of failures.
-Some of the most common mechanisms are described in table~\ref{tab:resilience-patterns}.
+Some of the most common mechanisms are described in Table~\ref{tab:resilience-patterns}.
 
 \begin{table}[!htb]
     \centering
@@ -58,16 +61,15 @@ These mechanisms can be further categorized based on when they are activated:
 
 \subsection{Technologies}\label{subsec:technologies}
 
-Kotlin Multiplatform~\cite{kotlin-multiplatform} is a technology that allows developers to share code across multiple platforms,
+Kotlin Multiplatform~\cite{kotlin-multiplatform} is a technology that allows sharing code across multiple platforms,
 such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
-This type of technology is particularly useful for developers
-who want to build services that run on multiple platforms,
-without having to write potentially equivalent platform-specific code, maintaining a reusable codebase.
+This type of technology is particularly useful for building services that run on multiple platforms,
+without having to write potentially equivalent platform-specific code and maintaining a reusable codebase.
 
 In 2019, Google announced Kotlin as the official language for Android development~\cite{google-android-kotlin},
 and more recently,
 official support for Android development with Kotlin Multiplatform~\cite{android-kotlin-multiplatform, google-kotlin-multiplatform}.
-This recognition further solidified Kotlin's Multiplatform as a viable technology for building multiplatform applications.
+This recognition strengthened Kotlin Multiplatform as a viable technology for building multiplatform applications.
 
 As a recent technology that is still evolving,
 and only reached stable status late last year~\cite{kotlin-multiplatform-stable},
@@ -81,7 +83,7 @@ An analysis of the Kotlin Multiplatform ecosystem has revealed a significant gap
 there is no specialized library that offers a wide variety of resilience mechanisms.
 This absence is a critical issue because resilience mechanisms are essential for building reliable and robust systems.
 
-To address this problem, it is crucial to develop a library that enables developers to integrate resilience mechanisms seamlessly into their projects, regardless of the platform they are targeting.
+To address this problem, it is important to develop a library that enables developers to integrate resilience mechanisms seamlessly into their projects, regardless of the platform they are targeting.
 
 
 \section{Related Work}\label{sec:related-work}
@@ -100,14 +102,14 @@ rate limiting the incoming requests on the server side~\cite{ktor-server-rate-li
 \subsubsection{Traditional Libraries}
 
 There are several libraries that provide resilience mechanisms for different programming languages and platforms.
-The table~\ref{tab:resilience_libraries} shows some examples of these libraries.
+Table~\ref{tab:resilience_libraries} shows some examples of these libraries.
 
 \begin{table}[!htb]
     \centering
     \caption{Examples of libraries that provide resilience mechanisms.}
     \label{tab:resilience_libraries}
     \vspace{0.3cm}
-    \begin{tabular}{|l|l|l}
+    \begin{tabular}{|l|l|l|}
         \hline
         \textbf{Library}                         & \textbf{Language} & \textbf{Plataform} \\ \hline
         Netflix's Hystrix~\cite{netflix-hystrix} & Java              & JVM                \\ \hline
@@ -126,9 +128,9 @@ Polly was used as a secondary source to explore alternative approaches and desig
 \subsubsection{Arrow Library}
 
 The Arrow library,
-which presents itself as the functional companion to Kotlin's standard library,
-focuses on functional programming and includes, among other modules, a resilience library.
-This library implements three of the most critical design patterns around resilience~\cite{arrow-resilience}:
+which presents itself as the functional companion to Kotlin's standard library, is a kotlin multiplatform library that
+focuses on functional programming and includes, among other modules, a resilience module.
+This module implements three of the most critical design patterns around resilience~\cite{arrow-resilience}:
 retry and repeat computations using a \textit{Schedule},
 protect other services from being overloaded using a \textit{CircuitBreaker},
 and implement transactional behaviour in distributed systems in the form of a \textit{Saga}.
@@ -139,7 +141,7 @@ and implement transactional behaviour in distributed systems in the form of a \t
 The goal of this project is
 to develop a dedicated Kotlin Multiplatform library that provides some of the aforementioned resilience mechanisms.
 
-Additionally, the project aims to provide access to these mechanisms through plugins for the Ktor framework.
+Additionally, the project aims to provide access to these mechanisms in the Ktor framework, using its extensibility features to create plugins.
 This integration was considered because:
 
 \begin{itemize}
@@ -163,6 +165,7 @@ The project will also provide a battery of tests
 to ensure the correctness and reliability of the implemented mechanisms and plugins,
 as well as documentation to guide developers on how to use them.
 
+
 \section{Document Structure}\label{sec:document-structure}
 
 This document is structured as follows:
@@ -172,5 +175,5 @@ This document is structured as follows:
     \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: Describes the design and implementation aspects that are common to all the resilience mechanisms; Additionally, it describes the Ktor framework and how it was used in the project;
     \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration, how it was implemented in both the library and as a plugin for the Ktor framework integration;
     \item \textbf{Chapter 5 - Circuit Breaker}: Same as the previous chapter, but for the Circuit Breaker mechanism;
-    \item \textbf{Chapter 6 - Final Remarks}: This chapter provides a summary of the project in a conclusion format and ends with future work considerations;
+    \item \textbf{Chapter 6 - Conclusion}: This chapter provides a summary of the project in a conclusion format and ends with future work considerations;
 \end{itemize}

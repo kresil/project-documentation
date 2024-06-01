@@ -2,32 +2,31 @@
 
 This chapter outlines the shared design principles of the implemented mechanisms and the development approach used to integrate them with Ktor.
 A comprehensive review and analysis of existing mechanism implementations~\ref{sec:related-work} were conducted
-to identify common design elements and relevant features that could be incorporated into the design of the new mechanisms.
+to identify common design elements and relevant features that could be incorporated into the design of the mechanisms implemented in this project.
 
 
 \section{Mechanism Model}\label{sec:mechanism-model}
 
-The common design elements identified in the existing mechanisms were used
-to define a model that represents the mechanisms' core components.
-These components form the foundation of all future mechanism's implementation, and are represented in the Mechanism Model, as shown in Figure~\ref{fig:mechanism-model}.
+The common design elements identified in the existing mechanisms implementations were used
+to define a model, as shown in Figure~\ref{fig:mechanism-model}.
+This model, named the Mechanism Model, is composed of multiple components, with distinct responsibilities and relations between them, that work together to provide a base foundation for implementing mechanisms:
 
-The Mechanism Model is composed of the following components:
 \begin{itemize}
-    \item \textbf{Configuration}: Represents a set of policies that, in conjuction, define the mechanism's behaviour (e.g., maximum number of retries, maximum wait duration, etc.);
+    \item \textbf{Configuration}: Represents a set of policies that, in conjuction, define the mechanism's intended behaviour (e.g., maximum number of retries, maximum wait duration, etc.);
     \item \textbf{Asynchronous Context}: Represents the mechanism's execution context, responsible for state management and event emission in an asynchronous environment;
     \item \textbf{State}: Represents the internal state of the mechanism;
-    \item \textbf{Implementation}: Applies the configuration to the mechanism's execution context.
+    \item \textbf{Implementation}: Is parameterized by the Configuration component and executes the mechanism's behaviour.
     Represents the core component of the mechanism;
-    \item \textbf{Registry}: Acts as a centralized container for storing and managing available mechanism implementations and their configurations.
+    \item \textbf{Registry}: Acts as a centralized container for storing and managing available mechanism implementations and configurations.
     The registry allows access to mechanism implementations throughout the application and enables the reuse of configurations to create new mechanisms;
     \item \textbf{Events}: Both the Asynchronous Context and Registry components are responsible for emitting events.
-    The Asynchronous Context component emits events related to the mechanism's execution, such as internal state transition changes.
+    The Asynchronous Context component emits events related to the mechanism's execution context, such as internal state transition changes.
     The Registry component emits events related to \textit{CRUD} operations performed in the registry.
     These events can be used for various purposes, such as logging and monitoring;
     \item \textbf{Metrics}: The mechanism's implementation component is responsible for recording metrics related to the mechanism's execution (e.g., number of retries, number of recorded failures, etc.).
     These metrics can be used for monitoring and analysis purposes;
     \item \textbf{Decorator}: The decorator is an extension of the Implementation component.
-    It is based on Resilience4J~\cite{resilience4j} decorators, and provides a convenient way to wrap code blocks with the mechanism's behaviour;
+    It is inspired on Resilience4J~\cite{resilience4j} decorators, and provides a convenient way to wrap code blocks with the mechanism's behaviour;
     \item \textbf{Ktor Plugin}: Responsible for the integration of the mechanism implementation with the Ktor pipeline.
     The Configuration component is also used to create a specific plugin configuration,
     which can be used to extend the mechanism's behaviour and provide additional features in an HTTP context.

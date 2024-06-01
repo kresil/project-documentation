@@ -1,8 +1,7 @@
 \chapter{Kotlin Multiplatform}\label{ch:kotlin-multiplatform}
 
-The Kotlin Multiplatform (KMP) technology allows developers to share code across multiple platforms, such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
-
 This chapter provides an overview of the technology, including its architecture, template structure, and other aspects relevant to the development of a multiplatform library.
+The Kotlin Multiplatform (KMP) technology allows developers to share code across multiple platforms, such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
 
 
 \section{Architecture}\label{sec:architecture}
@@ -20,15 +19,14 @@ An example of a KMP project architecture can be seen in Figure~\ref{fig:kmp-arch
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.9\textwidth]{../figures/02_kmp-architecture}
+    \includegraphics[width=0.8\textwidth]{../figures/02_kmp-architecture}
     \caption{Example of a KMP project architecture.}
     \label{fig:kmp-architecture}
 \end{figure}
 
 \subsection{Template}\label{subsec:template}
 
-Although it is possible to create a KMP project from scratch,
-it is recommended to use a template.
+It is possible to create a KMP project from scratch, but it is recommended to use a template to facilitate the project's setup and configuration.
 The official Kotlin Multiplatform template~\cite{kmp-github-template} provides a project structure
 that includes the necessary configurations for building,
 testing,
@@ -64,7 +62,7 @@ A Gradle project can be organized into multiple subprojects, each with its own b
 
 \subsection{GitHub Actions}\label{subsec:github-actions}
 
-Provided by the template, the project utilizes GitHub Actions~\cite{github-actions} for continuous integration and continuous deployment (CI/CD)~\cite{redhat-cicd}.
+Template provides workflows for GitHub Actions~\cite{github-actions}, which are used to automate tasks such as building, testing, and deploying a project.
 The configurations for GitHub Actions are located in the \textit{.github/workflows} folder, and include the following workflows:
 
 \begin{itemize}
@@ -126,8 +124,8 @@ However, it is sometimes necessary to create specific code for a given platform,
 
 \begin{itemize}
     \item Access to API's specific to the \textit{target} is required (e.g., \textit{Java's File API});
-    \item The libraries available in the common category (i.e., \textit{Standard Kotlin Library}, libraries from \textit{Kotlinx}) do not cover the desired functionalities and third-party libraries either don't support it or dependency reduction is desired;
-    \item A given \textit{target} does not directly support KMP (e.g., \textit{Node.js)}, and so it is necessary to create an \textit{adapter}.
+    \item The libraries available in the common category (i.e., \textit{Standard Kotlin Library}, libraries from \textit{Kotlinx}) do not cover the desired functionalities, and third-party libraries either do not support them or are avoided to reduce dependencies.
+    \item When specific types and functions defined in Kotlin need to be accessed in other languages (e.g., \textit{Javascript}), an \textit{adapter} is required.
     This adapter allows communication with the common category code, in \textit{Kotlin}, from the native code of the \textit{target}, which can be defined in the \textit{Intermediate} or \textit{Specific} category.
 \end{itemize}
 
@@ -140,15 +138,21 @@ This mechanism allows defining the code to be implemented in an abstracted way a
 The project supports the following targets:
 
 \begin{itemize}
-    \item \textbf{JVM}: Allows running the code on the Java Virtual Machine;
-    \item \textbf{JavaScript}: Allows running the code in a browser or Node.js environment;
+    \item \textbf{JVM}: Allows running the code on the \textit{Java Virtual Machine};
+    \item \textbf{JavaScript}: Allows running the code in a browser or \textit{Node.js} environment;
     \item \textbf{Android}: Allows running the code on Android devices.
-    \item \textbf{Native}: Allows running the code on platforms that support Kotlin/Native, excluding macOS and iOS, because the lack of access to the necessary hardware for testing.
+    \item \textbf{Native}: Allows running the code on platforms that support \textit{Kotlin/Native}, excluding macOS and iOS, because the lack of access to the necessary hardware for testing.
 \end{itemize}
 
 
 \section{Running Tests}\label{sec:running-tests}
-TODO
+TODO:
+
+
+\section{Library Practices}\label{sec:library-practices}
+TODO:
+- https://kotlinlang.org/docs/coding-conventions.html#coding-conventions-for-libraries
+- https://kotlinlang.org/docs/api-guidelines-introduction.html#what-s-next
 
 
 \section{Other Aspects}\label{sec:other-aspects}
