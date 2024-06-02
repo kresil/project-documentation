@@ -1,0 +1,21 @@
+\documentclass[a4paper,twoside,11pt]{article}
+
+% Defines external packages, language, margins, fonts and new commands
+\input{preamble}
+
+\begin{document}
+
+    \input{frontcover}
+
+    % line spacing: 12pt for single, 18pt for 1 1/2, and 24pt for double spacing
+    \baselineskip 18pt
+    \newpage
+    \thispagestyle{empty}
+
+    % reset page numbering
+    \setcounter{page}{1}
+    \pagenumbering{arabic}
+
+    \input{sections/01_org-description}
+
+\end{document}

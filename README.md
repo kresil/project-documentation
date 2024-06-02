@@ -14,8 +14,9 @@
 
 - [project-report](project-report/out/main.pdf)
 - [project-proposal](project-proposal/out/main.pdf)
-- [poster](poster/poster.pdf)
+- [project-org](project-org/out/main.pdf)
 - [presentations](presentations)
+- [poster](poster/poster.pdf)
 
 ## Instructions
 
