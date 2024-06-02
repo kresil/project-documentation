@@ -12,9 +12,10 @@
 
 ## Documents
 
-- [presentations](presentations)
-- [project-proposal](project-proposal/out/main.pdf)
 - [project-report](project-report/out/main.pdf)
+- [project-proposal](project-proposal/out/main.pdf)
+- [poster](poster/poster.pdf)
+- [presentations](presentations)
 
 ## Instructions
 
