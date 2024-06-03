@@ -1,60 +1,179 @@
-%
-% Capítulo 1
-%
-\chapter{Introdução}\label{ch:introducao}
-
-Este é o início do capítulo.
-Exemplo de indentação do segundo parágrafo.
-
-%
-% Secção 1.1
-%
+\chapter{Introduction}\label{ch:introduction}
 
 
-\section{Nome da secção deste capítulo} \label{sec11}
+\section{Context}\label{sec:context}
 
-Texto da secção. Na figura~\ref{fig:logotipo} mostra-se o logótipo do ISEL. Em \cite{wiki:bigdata2019} encontra várias referências para o assunto. O artigo \cite{6547630} é o mais popular conforme indicação do IEEE. Logo a seguir aparece \cite{6824752}. A identificação das referências deve ser melhorada.
+Our reliance on digital services has grown exponentially, driving the need for these services to be highly reliable and available always.
+Whether it's financial transactions, healthcare systems, or social media platforms, users expect uninterrupted access and seamless experiences.
+This expectation places significant pressure on the underlying infrastructure to handle failures gracefully and maintain service continuity.
+Achieving this level of reliability requires sophisticated mechanisms to manage and mitigate faults effectively.
 
-% Colocar uma figura
-\begin{figure}[h]
-    \begin{center}
-        \resizebox{100mm}{!}{\includegraphics{../../docs/imgs/logo-isel}}
-    \end{center}
-    \caption{Legenda da figura com o logótipo do ISEL.}\label{fig:logotipo}
-\end{figure}
+Most of these services are built on distributed systems,
+which consist of independent networked computers that present themselves to users as a single,
+coherent system~\cite{fcc-distributed-systems}.
+Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors.
+As such, it is crucial to ensure that services within distributed systems are resilient, and more specifically, fault-tolerant.
 
-Continuação do texto depois do parágrafo que refere a figura.
+Fault-tolerance and fault-resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences:
 
-%
-% Secção 1.2
-%
+\begin{itemize}
+    \item {\textbf{Fault-Tolerance}}:
+    A fault-tolerant service is a service that is able to maintain all or part of its functionality,
+    or provide an alternative, when one or more of its associated components fail.
+    The user does not observe see any fault except for some possible delay during which failover occurs;
+    \item {\textbf{Fault-Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.);
+\end{itemize}
+
+These distinctions are important,
+because it is possible to regard a fault-tolerant service
+as suffering \textit{no} downtime even if the machine it is running on crashes,
+whereas the potential data fault in a fault-resilient service counts toward downtime~\cite{fault-tolerance-vs-fault-resilience}.
+
+\subsection{Resilience Mechanisms}\label{subsec:resilience-mechanisms}
+
+Several resilience mechanisms have been developed to help build more robust and reliable systems.
+These mechanisms provide a set of tools and strategies to handle the inevitable occurrence of failures.
+Some of the most common mechanisms are described in Table~\ref{tab:resilience-patterns}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Resilience mechanisms examples. \textit{Resilience4j}~\cite{resilience4j} documentation}\label{tab:resilience-patterns}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{6cm}|p{6cm}|}
+        \hline
+        \textbf{Name}            & \textbf{Funcionality}                                                              & \textbf{Description}                                                                      \\ \hline
+        \textbf{Retry}           & Repeats failed executions.                                                         & Many faults are transient and may self-correct after a short delay.                       \\ \hline
+        \textbf{Circuit Breaker} & Temporary blocks possible failures.                                                & When a system is seriously struggling, failing fast is better than making clients wait.   \\ \hline
+        \textbf{Rate Limiter}    & Limits executions/period.                                                          & Limit the rate of incoming requests.                                                      \\ \hline
+        \textbf{Time Limiter}    & Limits duration of execution.                                                      & Beyond a certain wait interval, a successful result is unlikely.                          \\ \hline
+        \textbf{Bulkhead}        & Limits concurrent executions.                                                      & Resources are isolated into pools so that if one fails, the others will continue working. \\ \hline
+        \textbf{Cache}           & Memorizes a successful result.                                                     & Some proportion of requests may be similar.                                               \\ \hline
+        \textbf{Fallback}        & Defines an alternative value to be returned (or action to be executed) on failure. & Things will still fail - plan what you will do when that happens. \\ \hline
+    \end{tabular}
+\end{table}
+
+These mechanisms can be further categorized based on when they are activated:
+
+\begin{itemize}
+    \item \textbf{Reactive Resilience}: Reacts to failures and mitigates their impact (e.g., the \textit{Retry} mechanism is only triggered after a failure occurs);
+    \item \textbf{Proactive Resilience}: Prevents failures from happening (e.g., the \textit{Rate Limiter} mechanism is used to limit the rate of incoming requests, as a way to prevent the system from being overwhelmed and potentially fail - acts before a failure occurs).
+\end{itemize}
+
+\subsection{Technologies}\label{subsec:technologies}
+
+Kotlin Multiplatform~\cite{kotlin-multiplatform} is a technology that allows sharing code across multiple platforms,
+such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
+This type of technology is particularly useful for building services that run on multiple platforms,
+without having to write potentially equivalent platform-specific code and maintaining a reusable codebase.
+
+In 2019, Google announced Kotlin as the official language for Android development~\cite{google-android-kotlin},
+and more recently,
+official support for Android development with Kotlin Multiplatform~\cite{android-kotlin-multiplatform, google-kotlin-multiplatform}.
+This recognition strengthened Kotlin Multiplatform as a viable technology for building multiplatform applications.
+
+As a recent technology that is still evolving,
+and only reached stable status late last year~\cite{kotlin-multiplatform-stable},
+it lacks the necessary tools (e.g., libraries, frameworks, etc.)
+that provide the functionalities that are common in other ecosystems.
 
 
-\section{A segunda secção deste capítulo} \label{sec12}
-Na segunda secção deste capítulo, vamos abordar o enquadramento,
-o contexto e as funcionalidades.
+\section{Problem}\label{sec:problem}
 
-%
-% Secção 1.2.1
-%
+An analysis of the Kotlin Multiplatform ecosystem has revealed a significant gap:
+there is no specialized library that offers a wide variety of resilience mechanisms.
+This absence is a critical issue because resilience mechanisms are essential for building reliable and robust systems.
 
-\subsection{A primeira sub-secção desta secção} \label{sec121}
-As sub-secções são úteis para mostrar determinados conteúdos de forma
-organizada. Contudo, o seu uso excessivo também não contribui para a facilidade
-de leitura do documento.
-
-%
-% Secção 1.2.2
-%
-
-\subsection{A segunda sub-secção desta secção} \label{sec122}
-Esta é a segunda sub-secção desta secção, a qual termina aqui.
+To address this problem, it is important to develop a library that enables developers to integrate resilience mechanisms seamlessly into their projects, regardless of the platform they are targeting.
 
 
-%
-% Secção 1.3
-%
+\section{Related Work}\label{sec:related-work}
+
+\subsection{Ktor}\label{subsec:ktor}
+Ktor~\cite{ktor} is a Kotlin Multiplatform framework designed for building asynchronous servers and clients, such as web applications and microservices.
+
+The framework already provides some of the aforementioned resilience mechanisms as plugins,
+that can be installed in the underlying pipepile
+to intercept specific phases of the request/response cycle and apply the desired behaviour
+(e.g., retrying a request on the client side~\cite{ktor-client-retry},
+rate limiting the incoming requests on the server side~\cite{ktor-server-rate-limit}).
+
+\subsection{Other Solutions}\label{subsec:other-solutions}
+
+\subsubsection{Traditional Libraries}
+
+There are several libraries that provide resilience mechanisms for different programming languages and platforms.
+Table~\ref{tab:resilience_libraries} shows some examples of these libraries.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Examples of libraries that provide resilience mechanisms.}
+    \label{tab:resilience_libraries}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Library}                         & \textbf{Language} & \textbf{Plataform} \\ \hline
+        Netflix's Hystrix~\cite{netflix-hystrix} & Java              & JVM                \\ \hline
+        Resilience4j~\cite{resilience4j}         & Java/Kotlin       & JVM                \\ \hline
+        Polly ~\cite{polly-dotnet}               & C\#               & .NET               \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Hystrix served as an inspiration for Resilience4J, which is based on functional programming concepts.
+The primary distinction between the two is that, whereas Resilience4J relies on function composition to let you stack the specific decorators you need by utilizing Java 8's features (e.g., functional interfaces, lambda expressions)~\cite{resilience4j-vs-hystrix}, Hystrix embraces an object-oriented design where calls to external systems have to be wrapped in a \textit{HystrixCommand} offering multiple functionalities.
+
+Resilience4j served as the main source of inspiration for the project's development since it was considered a more modern way of implementing these mechanisms, follows a functional programming style, and is more in line with the characteristics of the Kotlin language.
+Polly was used as a secondary source to explore alternative approaches and design patterns that could be used in the project.
+
+\subsubsection{Arrow Library}
+
+The Arrow library,
+which presents itself as the functional companion to Kotlin's standard library, is a kotlin multiplatform library that
+focuses on functional programming and includes, among other modules, a resilience module.
+This module implements three of the most critical design patterns around resilience~\cite{arrow-resilience}:
+retry and repeat computations using a \textit{Schedule},
+protect other services from being overloaded using a \textit{CircuitBreaker},
+and implement transactional behaviour in distributed systems in the form of a \textit{Saga}.
 
 
-\section{Organização do documento} \label{sec13}
-O restante relatório encontra-se organizado da seguinte forma.
+\section{Project Goal}\label{sec:project-goal}
+
+The goal of this project is
+to develop a dedicated Kotlin Multiplatform library that provides some of the aforementioned resilience mechanisms.
+
+Additionally, the project aims to provide access to these mechanisms in the Ktor framework, using its extensibility features to create plugins.
+This integration was considered because:
+
+\begin{itemize}
+    \item Ktor is the only known Kotlin Multiplatform framework for server and client HTTP services development;
+    \item Immediately provide a way to use the library in a specific context;
+    \item Validate the implementation and extensibility of the library.
+\end{itemize}
+
+The library should be easy to use and configure, taking advantage of Kotlin's language features to provide a concise and expressive API.
+
+The intended mechanisms to be implemented and the respective plugins for the Ktor framework are:
+
+\begin{itemize}
+    \item Retry and Plugin Mechanism for Ktor Client;
+    \item Circuit Breaker Mechanism and Plugin for Ktor Client;
+    \item Rate Limiter Mechanism and Plugin for Ktor Server;
+    \item Cache Mechanism and Plugin for Ktor Server
+\end{itemize}
+
+The project will also provide a battery of tests
+to ensure the correctness and reliability of the implemented mechanisms and plugins,
+as well as documentation to guide developers on how to use them.
+
+
+\section{Document Structure}\label{sec:document-structure}
+
+This document is structured as follows:
+
+\begin{itemize}
+    \item \textbf{Chapter 2 - Kotlin Multiplatform}: Provides an overview of the Kotlin Multiplatform technology, its architecture, and how it can be used to share code across multiple platforms; Additionally, it describes the template used, the adopted project structure, and how to run tests in a multiplatform context;
+    \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: Describes the design and implementation aspects that are common to all the resilience mechanisms; Additionally, it describes the Ktor framework and how it was used in the project;
+    \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration, how it was implemented in both the library and as a plugin for the Ktor framework integration;
+    \item \textbf{Chapter 5 - Circuit Breaker}: Same as the previous chapter, but for the Circuit Breaker mechanism;
+    \item \textbf{Chapter 6 - Conclusion}: This chapter provides a summary of the project in a conclusion format and ends with future work considerations;
+\end{itemize}

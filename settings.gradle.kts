@@ -2,6 +2,7 @@ rootProject.name = "ps"
 
 include(":project-proposal")
 include(":project-report")
+include(":project-org")
 
 plugins {
     /*

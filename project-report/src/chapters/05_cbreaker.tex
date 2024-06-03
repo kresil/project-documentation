@@ -1,0 +1,237 @@
+\chapter{Circuit Breaker}\label{ch:circuit-breaker}
+
+This chapter describes the circuit breaker mechanism, its functionality, available configuration and how it was implemented in both the library and as a plugin for the Ktor framework integration.
+
+
+\section{Introduction}\label{sec:cbreaker-introduction}
+
+The circuit breaker mechanism is a \textit{\enquote{resilience pattern
+that prevents an application from performing an operation that is likely to fail.
+By allowing it
+to continue
+without waiting for the fault to be fixed or wasting CPU cycles while it determines that the fault is long-lasting
+}}~\cite{microsoft-cbreaker-pattern}.
+
+When an application calls a remote service, there's always a risk of failure
+(e.g., network issues, service unavailability, or timeouts).
+Some of these faults are temporary (transient) and resolved quickly,
+but others can be long-lasting and severe (e.g., a complete loss of connectivity, complete failure of a service).
+
+Moreover, if a service is under heavy-load, a failure in one part of the system might lead to cascading failures.
+For example, if an operation is set to time out and fail after a certain period, multiple concurrent requests could be blocked until the timeout expires.
+These blocked requests consume critical resources like memory, threads, and database connections, potentially leading to system-wide failures~\cite{microsoft-cbreaker-pattern}.
+In such cases, it’s more efficient for the application to quickly acknowledge the failure and handle it appropriately, rather than repeatedly retrying the operation.
+
+\subsection{Relation to Retry Mechanism}\label{subsec:cbreaker-relation-to-retry}
+
+The circuit breaker mechanism is related to the retry mechanism~\ref{ch:retry}, as both are used to handle faults that might occur when connecting to a remote service or resource.
+However, the two mechanisms are used in different situations.
+The retry mechanism is used to retry an operation in the expectation that it'll succeed, while the circuit breaker mechanism is used to prevent an application from performing an operation that is likely to fail~\cite{microsoft-cbreaker-pattern}.
+
+An application can combine these two mechanisms by using the retry mechanism to invoke an operation through a circuit breaker.
+However,
+the retry logic should be sensitive to any failures returned by the circuit breaker
+and abandon retry attempts
+if the circuit breaker indicates that a failure is not transient~\cite{microsoft-cbreaker-pattern}.
+
+\subsection{State Machine}\label{subsec:cbreaker-state-machine}
+
+The circuit breaker mechanism works as an electrical circuit breaker~\cite{electrical-circuit-breaker},
+which is a safety device that automatically stops the flow of electric current in a circuit as a safety measure
+(e.g., to prevent a fire) when it detects a fault condition.
+In contrast to the electrical circuit breaker which needs a manual reset,
+the circuit breaker mechanism automatically resets itself if the fault condition is resolved.
+
+The default implementation of the circuit breaker uses a state machine,
+as illustrated in Figure~\ref{fig:circuit-breaker-state-machine}, with the following states:
+
+\begin{itemize}
+    \item \textbf{Closed} - The circuit allows the operation to execute and records its execution result
+    (i.e., success or failure).
+    If a configurable failure threshold is reached, the circuit transitions to the open state;
+    \item \textbf{Open} - The circuit does not allow the operation to be executed.
+    Instead, a predefined failure message is returned.
+    The circuit remains open for a predefined period of time, after which it transitions to the half-open state.
+    This timer is used to allow the system to recover from the fault condition;
+    \item \textbf{Half-Open} - The circuit allows a limited number of requests to execute the operation.
+    If these requests are successful,
+    it's assumed that the fault
+    that was previously causing the failure has been fixed and the circuit breaker switches to the \texttt{Closed} state
+    (resetting the failure counter).
+    If any request fails,
+    the circuit breaker assumes that the fault is still present,
+    so it reverts to the \texttt{Open} state (restarting the timeout timer).
+\end{itemize}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.6\textwidth]{../figures/05_cbreaker-states}
+    \caption{Circuit Breaker State Machine.}
+    \label{fig:circuit-breaker-state-machine}
+\end{figure}
+
+The \texttt{Half-Open} state is useful to prevent a recovering service from suddenly being flooded with requests.
+As a service recovers, it might be able to support a limited volume of requests until the recovery is complete,
+but while recovery is in progress, a flood of work can cause the service
+to time out or fail again~\cite{microsoft-cbreaker-pattern}.
+
+Other implementations might have additional states (e.g., for maintenance, testing, metrics purposes), usually manually triggered, such as:
+
+\begin{itemize}
+    \item \textbf{Forced Open} - The circuit is always open, preventing the operation from executing;
+    \item \textbf{Forced Closed} - The circuit is always closed, allowing the operation to execute as if the circuit breaker were not present.
+\end{itemize}
+
+\subsection{Operation Execution}\label{subsec:cbreaker-operation-execution}
+
+An operation protected by a circuit breaker is executed through the circuit breaker.
+When the operation is invoked, the circuit breaker checks its state to determine if the operation should be executed,
+as illustrated in Figure~\ref{fig:cbreaker-decoration}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.6\textwidth]{../figures/05_cbreaker-decoration}
+    \caption{Circuit Breaker Decoration.}
+    \label{fig:cbreaker-decoration}
+\end{figure}
+
+Regarding the underlying operation execution,
+it's important to note that the circuit breaker does not synchronize the received calls (i.e., it does not prevent multiple threads from invoking the operation concurrently when the circuit is in a state that allows the operation to be executed).
+
+To restrict the number of concurrent calls to the operation, a bulkhead~\cite{microsoft-bulkhead-pattern} should be used in combination with the circuit breaker.
+
+\subsection{Recording Execution Results}\label{subsec:cbreaker-recording-execution-results}
+
+The circuit breaker mechanism records the results of the operation executions to determine when to open the circuit.
+This recording uses a sliding window~\cite{sliding-window} which can be implemented in different ways:
+
+\begin{itemize}
+    \item \textbf{Count-based} -
+    The circuit breaker opens when the number of failures exceeds a predefined threshold
+    (e.g., 50\% of the last 10 operations failed, assuming a window size of 10).
+    \item \textbf{Time-based} -
+    The circuit breaker opens when the failure rate exceeds a predefined threshold over a specific period of time
+    (e.g., 50\% of the operations failed within the last 10 seconds,
+    assuming a window size of 10 with one-second intervals).
+\end{itemize}
+
+The time-based sliding window is used
+to track the outcomes of recent operation executions over a specific time interval,
+making decisions based on recent performance rather than solely relying on historical data
+(which might not be relevant in some cases).
+
+As newer results are recorded, older results are removed from the window, keeping a
+LIFO (Last In, First Out) order.
+This approach ensures that the window size remains constant and that the circuit breaker can make decisions based on the most recent data.
+
+
+\section{Configuration}\label{sec:cbreaker-configuration}
+
+The retry mechanism can be configured
+using a dedicated configuration builder with the properties listed in Table~\ref{tab:cbreaker-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{CircuitBreakerConfigBuilder}}
+    \label{tab:cbreaker-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}          & \textbf{Default Value/Behaviour} & \textbf{Description}                                                                                                                                        \\ \hline
+        \texttt{failureRateThreshold}     & \texttt{0.5}                     & The rate in percentage of calls recorded as failures that will trigger the circuit breaker to transition to the \texttt{Open} state if equaled or exceeded. \\ \hline
+        \texttt{permittedNumberOfCalls InHalfOpenState} & \texttt{10} & The number of calls
+        allowed in the \texttt{HalfOpen} state. \\ \hline
+        \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration
+        the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning back to the \texttt{Open} state.
+        If set to \texttt{0}, it waits indefinitely until permitted calls are executed. \\ \hline
+        \texttt{slidingWindow} & \texttt{SlidingWindow[ size=100, minimumThroughput=100, type=COUNT\_BASED]}
+        & Configures the sliding window used to record calls and calculate the failure rate.
+        Minimum throughput is the minimum number of calls
+        that must be recorded before the failure rate is calculated.
+        \\ \hline
+        \texttt{delayStrategyInOpenState} & \texttt{Constant[ delay=1m]}     & The strategy used to determine the duration the circuit breaker will remain in the \texttt{Open} state before transitioning to the \texttt{HalfOpen} state. \\ \hline
+        \texttt{recordExceptionPredicate} & \texttt{throwable ->
+            true} & Predicate
+        to determine if an exception thrown by the underlying operation should be recorded as a failure, and as such, increase the failure rate. \\ \hline
+        \texttt{recordResultPredicate} & \texttt{result ->
+            false} & Predicate
+        to determine if the result of the underlying operation should be recorded as a failure, and as such, increase the failure rate. \\ \hline
+    \end{tabular}
+\end{table}
+
+The default configuration can be overriden by calling the respective builder methods.
+The values that compose the default configuration are the most common and recommended for most use cases, but they can be adjusted to better suit the application's needs.
+
+
+\section{Implementation Aspects}\label{sec:cbreaker-implementation-aspects}
+
+The circuit breaker mechanism was implemented with the following components:
+
+\begin{itemize}
+    \item \textbf{State Reducer} - Manages the circuit breaker state transitions inside mutual exclusion;
+    \item \textbf{Sliding Window} - Records the operation's execution results;
+    \item \textbf{Circuit Breaker} - Consults the state, executes operations and dispatches actions to the state reducer.
+\end{itemize}
+
+An example of the interaction between these components is illustrated in Figure~\ref{fig:circuit-breaker-execution-example},
+where the circuit breaker receives two orderly requests to execute an operation after working for some time:
+
+\begin{boldenumerate}
+    \item Client-A requests the operation to be executed.
+    As the operation is protected by the circuit breaker, the circuit breaker is consulted.
+    \item The circuit breaker checks the shared state, in mutual exclusion,
+    and sees that it is \texttt{Closed}, allowing the operation to be executed under its vigilance.
+    \item The operation is executed outside mutual exclusion.
+    \item The operation succeeds, and the result is recorded by the circuit breaker.
+    Even though the operation succeeded, the minimum throughput is reached,
+    and as such, the failure rate is considered.
+    Since the failure rate equals the threshold, the circuit breaker transitions to the \texttt{Open} state.
+    \item Client-B requests the operation to be executed through the circuit breaker.
+    \item The circuit breaker checks the shared state, in mutual exclusion, and sees that it is \texttt{Open}, thus preventing the operation from being executed.
+    \item Client-B receives a predefined failure message.
+\end{boldenumerate}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/05_cbreaker-execution-example}
+    \caption{Circuit Breaker Execution Example.}
+    \label{fig:circuit-breaker-execution-example}
+\end{figure}
+
+\subsection{State Reducer}\label{subsec:cbreaker-state-reducer}
+
+The circuit breaker was implemented using the state reducer pattern,
+in order to delegate the state transitions and mutual exclusion to a single component.
+
+The reducer pattern is a design pattern
+that allows the state of a system
+to be managed by a single reducer function
+that takes the current state and an action/event as input and returns the new state, as illustrated in Figure~\ref{fig:reducer-pattern}.
+It is a common pattern in the Redux~\cite{redux} state management library and the React~\cite{react-use-reducer} library,
+both widely used in the JavaScript ecosystem.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../figures/05_reducer-pattern}
+    \caption{State Reducer Pattern.}
+    \label{fig:reducer-pattern}
+\end{figure}
+
+The reducer pattern has the following characteristics:
+
+\begin{itemize}
+    \item \textbf{State} - The state of the system is stored in a single immutable object and can be consulted as a snapshot of the system at any point in time;
+    \item \textbf{Action} - An event that potentially triggers a state transition;
+    \item \textbf{Dispatch} - A function that sends an action to the reducer to trigger a state transition;
+    \item \textbf{Reducer} - A function that takes the current state and an action as input and returns the new state.
+    Must be a pure function, meaning it must not have side effects and return the same output for the same input (deterministic).
+\end{itemize}
+
+\subsection{Sliding Window}\label{subsec:cbreaker-sliding-window}
+
+TODO: talk about ring buffer and other things that were needed to implement the count-based sliding window (time-based is not implemented yet)
+
+
+\section{Ktor Integration}\label{sec:cbreaker-ktor-integration}
+
+TODO
