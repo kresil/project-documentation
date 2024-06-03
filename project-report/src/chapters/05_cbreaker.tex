@@ -65,7 +65,7 @@ as illustrated in Figure~\ref{fig:circuit-breaker-state-machine}, with the follo
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.7\textwidth]{../figures/05_cbreaker-states}
+    \includegraphics[width=0.6\textwidth]{../figures/05_cbreaker-states}
     \caption{Circuit Breaker State Machine.}
     \label{fig:circuit-breaker-state-machine}
 \end{figure}
@@ -90,7 +90,7 @@ as illustrated in Figure~\ref{fig:cbreaker-decoration}.
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.7\textwidth]{../figures/05_cbreaker-decoration}
+    \includegraphics[width=0.6\textwidth]{../figures/05_cbreaker-decoration}
     \caption{Circuit Breaker Decoration.}
     \label{fig:cbreaker-decoration}
 \end{figure}
@@ -120,7 +120,8 @@ to track the outcomes of recent operation executions over a specific time interv
 making decisions based on recent performance rather than solely relying on historical data
 (which might not be relevant in some cases).
 
-As newer results are recorded, older results are removed from the window, keeping a FIFO (First In, First Out) ordering.
+As newer results are recorded, older results are removed from the window, keeping a
+LIFO (Last In, First Out) order.
 This approach ensures that the window size remains constant and that the circuit breaker can make decisions based on the most recent data.
 
 
@@ -177,26 +178,29 @@ where the circuit breaker receives two orderly requests to execute an operation 
 
 \begin{boldenumerate}
     \item Client-A requests the operation to be executed.
-    \item The circuit breaker checks the state, in mutual exclusion, and sees that it is \texttt{Closed}, allowing the operation to be executed.
+    As the operation is protected by the circuit breaker, the circuit breaker is consulted.
+    \item The circuit breaker checks the shared state, in mutual exclusion,
+    and sees that it is \texttt{Closed}, allowing the operation to be executed under its vigilance.
     \item The operation is executed outside mutual exclusion.
     \item The operation succeeds, and the result is recorded by the circuit breaker.
-    Even though the operation succeeded, the minimum throughput was reached, so the failure rate is calculated.
+    Even though the operation succeeded, the minimum throughput is reached,
+    and as such, the failure rate is considered.
     Since the failure rate equals the threshold, the circuit breaker transitions to the \texttt{Open} state.
-    \item Client-B requests the operation to be executed.
-    \item The circuit breaker checks the state, in mutual exclusion, and sees that it is \texttt{Open}, preventing the operation from being executed.
+    \item Client-B requests the operation to be executed through the circuit breaker.
+    \item The circuit breaker checks the shared state, in mutual exclusion, and sees that it is \texttt{Open}, thus preventing the operation from being executed.
     \item Client-B receives a predefined failure message.
 \end{boldenumerate}
 
-\begin{figure}[H]
+\begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.7\textwidth]{../figures/05_cbreaker-execution-example}
+    \includegraphics[width=0.8\textwidth]{../figures/05_cbreaker-execution-example}
     \caption{Circuit Breaker Execution Example.}
     \label{fig:circuit-breaker-execution-example}
 \end{figure}
 
 \subsection{State Reducer}\label{subsec:cbreaker-state-reducer}
 
-The circuit breaker was implemented using a state reducer pattern,
+The circuit breaker was implemented using the state reducer pattern,
 in order to delegate the state transitions and mutual exclusion to a single component.
 
 The reducer pattern is a design pattern
@@ -208,7 +212,7 @@ both widely used in the JavaScript ecosystem.
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.7\textwidth]{../figures/05_reducer-pattern}
+    \includegraphics[width=0.5\textwidth]{../figures/05_reducer-pattern}
     \caption{State Reducer Pattern.}
     \label{fig:reducer-pattern}
 \end{figure}
@@ -216,11 +220,11 @@ both widely used in the JavaScript ecosystem.
 The reducer pattern has the following characteristics:
 
 \begin{itemize}
-    \item \textbf{State} - The state of the system is stored in a single immutable object and can be consulted as a snapshot of the system at any point in time.
-    \item \textbf{Action} - An event that potentially triggers a state transition.
-    \item \textbf{Dispatch} - A function that sends an action to the reducer to trigger a state transition.
+    \item \textbf{State} - The state of the system is stored in a single immutable object and can be consulted as a snapshot of the system at any point in time;
+    \item \textbf{Action} - An event that potentially triggers a state transition;
+    \item \textbf{Dispatch} - A function that sends an action to the reducer to trigger a state transition;
     \item \textbf{Reducer} - A function that takes the current state and an action as input and returns the new state.
-    Must be a pure function, meaning it must not have side effects and must return the same output for the same input.
+    Must be a pure function, meaning it must not have side effects and return the same output for the same input (deterministic).
 \end{itemize}
 
 \subsection{Sliding Window}\label{subsec:cbreaker-sliding-window}

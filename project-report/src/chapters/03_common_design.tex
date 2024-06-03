@@ -34,7 +34,7 @@ This model, named the Mechanism Model, is composed of multiple components, with 
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.8\textwidth]{../figures/03_mechanism-model}
+    \includegraphics[width=0.6\textwidth]{../figures/03_mechanism-model}
     \caption{Mechanism Model}
     \label{fig:mechanism-model}
 \end{figure}
@@ -64,11 +64,14 @@ The configuration process is as follows:
 Independent of the execution environment, synchronous or asynchronous, the mechanism's execution context can only be one of the following:
 
 \begin{itemize}
-    \item \textbf{Per Mechanism}: A new execution context is created when the mechanism itself is instantiated (e.g., the Circuit Breaker mechanism has a single execution context for managing the circuit state, as multiple callers can interact with the mechanism at the same time);
-    \item \textbf{Per Decoration}: When a decorator is applied to an operation, it creates a new execution context specific to that decoration, before invoking the underlying operation;
+    \item \textbf{Per Mechanism Instance}: A new execution context is created when the mechanism itself is instantiated (e.g., when the Circuit Breaker mechanism is used to decorate multiple operations, a single execution context is shared among all decorated operations);
+    \item \textbf{Per Decoration}: When a decorator is applied to an operation, it creates a new execution context specific to that decoration, before invoking the underlying operation (e.g., the Circuit Breaker mechanism can be used to decorate a single operation, as decorating multiple operations would be a per mechanism instance context);
     \item \textbf{Per Method Invocation}: A new execution context is created each time the decorated method is invoked.
     This is the most granular form of execution context, providing isolation for each method call.
-    If the underlying operation is thread-safe, then this form of execution context is also thread-safe, as only the calling thread executes the context (e.g., the Retry mechanism creates a new execution context for each underlying operation invocation).
+    If the underlying operation is thread-safe, then this form of execution context is also thread-safe,
+    as only the calling thread executes the context
+    (e.g., the Retry mechanism creates a new execution context for each underlying operation invocation,
+    because each retry attempt cycle is independent of other cycles).
 \end{itemize}
 
 \subsection{Asynchronous Context}\label{subsec:asynchronous-context}
