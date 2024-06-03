@@ -7,29 +7,39 @@ subprojects {
     val outDirName: String by extra { "out" }
     val srcDirName: String by extra { "src" }
     val mainTexFileName: String by extra { "main" }
+    val useBibtex: Boolean by extra { true }
 
     // the directory where the submodule is located from the root project
     val moduleDir: String = project.projectDir.toString()
 
     afterEvaluate {
-        tasks.register("bibtex") {
-            outputs.upToDateWhen { false }
-            description =
-                "Compiles the bibliography after the first iteration of pdflatex"
-            dependsOn("pdflatex-A")
-            exec {
-                setWorkingDir("$moduleDir/$srcDirName")
-                commandLine(
-                    "bibtex",
-                    "$moduleDir/$auxDirName/$mainTexFileName",
-                )
-            }
-        }
 
-        tasks.register("build-mid-step") {
-            outputs.upToDateWhen { false }
-            dependsOn("bibtex")
-            finalizedBy("pdflatex-B")
+        if (useBibtex) {
+            tasks.register("bibtex") {
+                outputs.upToDateWhen { false }
+                description =
+                    "Compiles the bibliography after the first iteration of pdflatex"
+                dependsOn("pdflatex-A")
+                exec {
+                    setWorkingDir("$moduleDir/$srcDirName")
+                    commandLine(
+                        "bibtex",
+                        "$moduleDir/$auxDirName/$mainTexFileName",
+                    )
+                }
+            }
+
+            tasks.register("build-mid-step") {
+                outputs.upToDateWhen { false }
+                dependsOn("bibtex")
+                finalizedBy("pdflatex-B")
+            }
+        } else {
+            tasks.register("build-mid-step") {
+                outputs.upToDateWhen { false }
+                dependsOn("pdflatex-A")
+                finalizedBy("pdflatex-B")
+            }
         }
 
         tasks.register("buildPdf") {
