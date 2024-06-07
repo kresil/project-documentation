@@ -40,27 +40,24 @@ The following are some possible future work that can be done to enhance the libr
     \item \textbf{Additional Resilience Mechanisms}: The library can be expanded with additional resilience mechanisms such as Bulkhead,
     Timeout, and Fallback, and the corresponding Ktor plugins for client and server sides.
     This will complete the set of considered essential mechanisms for building resilient systems;
-
     \item \textbf{Registry}:
     Implement a registry system
     to access and manage the resilience mechanisms and their configurations at runtime and in a centralized manner;
-
     \item \textbf{Metrics}:
     Implement a metrics system to collect information of the resilience mechanisms execution (e.g., the number of retries, the number of failures, etc.) for monitoring and analysis purposes;
-
-    \item \textbf{Testing Improvements:}
+    \item \textbf{Testing Improvements}:
     Enhance the testing suites with more comprehensive and complex test cases
     to ensure the reliability and robustness of the library, as well as to cover more edge cases and scenarios.
     Extend the testing to cover the Ktor plugins as well;
-
     \item \textbf{Dedicated Pipeline}:
     Implement a pipeline mechanism,
     where multiple mechanisms can be attached in a specific order to handle different scenarios (i.e., easily combine two or more mechanisms such as retry and circuit breaker);
-
-    \item \textbf{Documentation and Examples:}
+    \item \textbf{Documentation and Examples}:
     Improve the documentation
     and provide more examples to help developers understand and use the library effectively.
     A website or a dedicated page should be created
     to host these resources.
-
+    A documentation engine such as Dokka~\cite{dokka} should be used to generate an additional documentation API website;
+    \item \textbf{Adapter for JavaScript}: Implement an adapter to call the library from JavaScript code.
+    As the current implementation of the library is only usable in Kotlin code, an adapter is needed to make it accessible from JavaScript code.
 \end{itemize}

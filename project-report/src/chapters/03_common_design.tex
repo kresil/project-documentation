@@ -89,6 +89,8 @@ In computer science, a thread~\cite{java-thread} of execution is the smallest se
 In addition to being managed independently by an operating system's scheduler, threads are fundamental units of execution within a process.
 They enable concurrent execution of tasks, allowing a program to perform multiple operations simultaneously.
 
+At a given time, only one thread can be active on a CPU core.
+
 \subsubsection{Kotlin Coroutines}\label{subsubsec:kotlin-coroutines}
 
 A coroutine is an instance of a potentially suspendable computation,
@@ -99,8 +101,12 @@ to run that works concurrently with the rest of the code~\cite{kotlin-coroutines
 However, a coroutine is not bound to any particular thread,
 as it may suspend its execution in one thread and resume in another one.
 
-A suspended coroutine does not block the underlying thread, freeing it to run other coroutines or perform other tasks.
-In a thread, only one coroutine can run at a given time.
+A suspended coroutine does not block the underlying thread, allowing it to execute other coroutines or tasks.
+In a thread, only one coroutine runs at a time.
+
+A coroutine does not monopolize a thread during its execution.
+Instead, a single thread can run multiple coroutines by using time multiplexing,
+similar to how a single CPU can run multiple threads.
 
 Another important feature of coroutines is that they enforce structured concurrency~\cite{kotlin-coroutines}.
 Structured concurrency is a programming paradigm that enforces a hierarchical structure on concurrent code, ensuring that all concurrent tasks are properly managed and cleaned up, and any errors are propagated correctly and not lost.

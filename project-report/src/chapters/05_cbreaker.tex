@@ -22,7 +22,7 @@ For example, if an operation is set to time out and fail after a certain period,
 These blocked requests consume critical resources like memory, threads, and database connections, potentially leading to system-wide failures~\cite{microsoft-cbreaker-pattern}.
 In such cases, it’s more efficient for the application to quickly acknowledge the failure and handle it appropriately, rather than repeatedly retrying the operation.
 
-\subsection{Relation to Retry Mechanism}\label{subsec:cbreaker-relation-to-retry}
+\subsection{Relation To The Retry Mechanism}\label{subsec:cbreaker-relation-to-retry}
 
 The circuit breaker mechanism is related to the retry mechanism~\ref{ch:retry}, as both are used to handle faults that might occur when connecting to a remote service or resource.
 However, the two mechanisms are used in different situations.
@@ -51,7 +51,7 @@ as illustrated in Figure~\ref{fig:circuit-breaker-state-machine}, with the follo
     If a configurable failure threshold is reached, the circuit transitions to the open state;
     \item \textbf{Open} - The circuit does not allow the operation to be executed.
     Instead, a predefined failure message is returned.
-    The circuit remains open for a predefined period of time, after which it transitions to the half-open state.
+    The circuit remains open for a predefined period of time, after which it transitions to the Half-open state.
     This timer is used to allow the system to recover from the fault condition;
     \item \textbf{Half-Open} - The circuit allows a limited number of requests to execute the operation.
     If these requests are successful,
@@ -143,7 +143,7 @@ using a dedicated configuration builder with the properties listed in Table~\ref
         allowed in the \texttt{HalfOpen} state. \\ \hline
         \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration
         the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning back to the \texttt{Open} state.
-        If set to \texttt{0}, it waits indefinitely until permitted calls are executed. \\ \hline
+        If set to \texttt{0}, it waits indefinitely until all permitted calls are executed. \\ \hline
         \texttt{slidingWindow} & \texttt{SlidingWindow[ size=100, minimumThroughput=100, type=COUNT\_BASED]}
         & Configures the sliding window used to record calls and calculate the failure rate.
         Minimum throughput is the minimum number of calls
@@ -161,7 +161,6 @@ using a dedicated configuration builder with the properties listed in Table~\ref
 
 The default configuration can be overriden by calling the respective builder methods.
 The values that compose the default configuration are the most common and recommended for most use cases, but they can be adjusted to better suit the application's needs.
-
 
 \section{Implementation Aspects}\label{sec:cbreaker-implementation-aspects}
 
@@ -229,9 +228,86 @@ The reducer pattern has the following characteristics:
 
 \subsection{Sliding Window}\label{subsec:cbreaker-sliding-window}
 
-TODO: talk about ring buffer and other things that were needed to implement the count-based sliding window (time-based is not implemented yet)
+The sliding window is used to record the operation's execution results and calculate the failure rate.
+It is implemented as a circular/ring buffer.
 
+A circular buffer is a fixed-size buffer with a pointer to indicate the next empty position, incrementing with each new entry.
+When full, new data overwrites the oldest data, as the pointer wraps around to the beginning of the buffer, as illustrated in Figure~\ref{fig:05_circular-buffer}.
+This eliminates the need to shift elements for new entries and allows for constant time complexity for adding elements~\cite{circular-buffer}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/05_circular-buffer}
+    \caption{Circular Buffer.}
+    \label{fig:05_circular-buffer}
+\end{figure}
+
+\subsection{Delay Strategy}\label{subsec:cbreaker-delay-strategy}
+
+The delay strategy is used
+to determine the duration the circuit breaker will remain in the \texttt{Open} state before transitioning to the \texttt{HalfOpen} state.
+
+This mechanism presents the same delay strategy options as the retry mechanism (See Section~\ref{subsec:retry-delay-strategies} and Section~\ref{subsec:retry-custom-delay-provider}).
+
+\subsection{Delay Handling}\label{subsec:cbreaker-delay-handling}
+
+The first approach to handle the delay in the \texttt{Open} state was
+to launch a coroutine with a delay that transitions the circuit breaker to the \texttt{HalfOpen} state.
+But this approach had two problems: handling cancellation and reducer presenting side effects.
+
+Instead,
+a comparable time marker was used to store the exact time when the circuit breaker transitioned to the \texttt{Open} state.
+This marker is consulted when callers send external events to the reducer component,
+behaving as an internal event.
+If the delay has passed, the circuit breaker transitions, automatically, to the \texttt{HalfOpen} state,
+before attending any external events.
+
+The same approach was used for the \texttt{HalfOpen} state, where the circuit breaker transitions back to the \texttt{Open} state if the maximum wait duration is reached.
 
 \section{Ktor Integration}\label{sec:cbreaker-ktor-integration}
 
-TODO
+The circuit breaker mechanism was integrated with Ktor by implementing a custom plugin that can be added to the application's Ktor pipeline, using the implemented circuit breaker mechanism.
+
+\subsection{Plugin Implementation}\label{subsec:circuit-breaker-plugin}
+
+The plugin was designed for Ktor clients to wire the circuit breaker mechanism to the HTTP client pipeline.
+The circuit breaker plugin will act before the request is sent to the server,
+consulting the circuit breaker state to determine if the request should be executed and after the response is received,
+recording the result of the operation.
+
+A listener to log all events emitted by the circuit breaker context is also enabled, which cancels its subscription when the request is completed.
+
+\subsection{Configuration}\label{subsec:circuit-breaker-configuration}
+
+The circuit breaker Ktor plugin can be configured
+by using a dedicated configuration builder with the properties listed in Table~\ref{tab:circuit-breaker-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{CircuitBreakerConfigBuilder}}
+    \label{tab:circuit-breaker-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}                   & \textbf{Default Value/Behaviour}                                                     & \textbf{Description}                                                                                                                                        \\ \hline
+        \texttt{failureRateThreshold}              & \texttt{0.5}                                                                         & The rate in percentage of calls recorded as failures that will trigger the circuit breaker to transition to the \texttt{Open} state if equaled or exceeded. \\ \hline
+        \texttt{permittedNumberOfCalls InHalfOpenState} & \texttt{10} & The number of calls
+        allowed in the \texttt{HalfOpen} state. \\ \hline
+        \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration
+        the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning back to the \texttt{Open} state.
+        If set to \texttt{0}, it waits indefinitely until all permitted calls are executed. \\ \hline
+        \texttt{slidingWindow} & \texttt{SlidingWindow[ size=100, minimumThroughput=100, type=COUNT\_BASED]}
+        & Configures the sliding window used to record calls and calculate the failure rate.
+        Minimum throughput is the minimum number of calls
+        that must be recorded before the failure rate is calculated.
+        \\ \hline
+        \texttt{delayStrategyInOpenState}          & \texttt{Exponential[ initialDelay=30s, multiplier=2.0, maxDelay=10m]}     & The strategy used to determine the duration the circuit breaker will remain in the \texttt{Open} state before transitioning to the \texttt{HalfOpen} state. \\ \hline
+        \texttt{recordResponseAsFailure Predicate} & \texttt{(response) -> records a failure if a 5xx response is received from a server}                               & Predicate to determine if a response should be recorded as a failure.                                   \\ \hline
+    \end{tabular}
+\end{table}
+
+Additionally, methods relevant to an HTTP context were added to the configuration builder to simplify the configuration process:
+
+\begin{itemize}
+    \item \texttt{recordFailureOnServerErrors}: Records server responses with status codes in the range 500-599 as failures;
+\end{itemize}

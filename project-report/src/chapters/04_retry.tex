@@ -126,7 +126,7 @@ During the initial development phases, if an operation failed after multiple ret
 the last caught exception was always rethrown,
 and the original result was returned without any modifications.
 This approach is sufficient for most use cases,
-and most studied implementations of the retry mechanism follow this pattern, but
+and the studied implementations of the retry mechanism follow this pattern, but
 it was decided to provide a more flexible solution
 (e.g., the caller doesn't want a specific exception to be thrown, but instead wants to log it only).
 To address this, an exception handler was introduced to the configuration.
@@ -215,7 +215,8 @@ A listener to log all events emitted by the retry context is also enabled, which
 
 \subsection{Configuration}\label{subsec:retry-ktor-configuration}
 
-The retry Ktor plugin can be configured by providing a configuration builder with the properties listed in Table~\ref{tab:retry-ktor-config-builder}.
+The retry Ktor plugin can be configured by using a dedicated configuration builder with the properties listed in
+Table~\ref{tab:retry-ktor-config-builder}.
 
 \begin{table}[!htb]
     \centering
@@ -238,5 +239,5 @@ Additionally, methods relevant to an HTTP context were added to the configuratio
 \begin{itemize}
     \item \texttt{retryOnServerErrors}: Retries the HTTP call if the response status code is in the range: 500-599;
     \item \texttt{retryOnServerErrorsIfIdempotent}: Similar to \texttt{retryOnServerErrors}, but only retries if the request method is idempotent~\cite{idempotent-http-method} (e.g., \texttt{GET, PUT, DELETE});
-    \item \texttt{retryOnTimeout}: Retries the HTTP call if the exception thrown is a timeout exception (e.g., connection timeout exceeded).
+    \item \texttt{retryOnTimeout}: Retries the HTTP call if the exception thrown is a timeout exception (e.g., connection timeout exceeded, request timeout exceeded).
 \end{itemize}
