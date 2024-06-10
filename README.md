@@ -26,7 +26,8 @@
     - Update `MikTeX` packages: `MikTeX Console -> Updates -> Check for updates`;
 - Install [SumatraPDF](https://www.sumatrapdfreader.org/download-free-pdf-viewer) viewer;
 - Install [TeXiFy IDEA](https://plugins.jetbrains.com/plugin/9473-texify-idea) plugin;
-- Configure inverse-search in `Intellij IDEA` for SumatraPDF: `Tools -> LaTeX -> Configure Inverse Search` which enables
+- Configure inverse-search in `Intellij IDEA` for SumatraPDF: `Tools -> LaTeX -> Configure Inverse Search`, which
+  enables
   the user to jump from the pdf to the corresponding tex file source.
 
 ### Add a new subproject
@@ -56,6 +57,7 @@
       | `outDirName`      | `out`         | name of the output directory, where the pdf file will be generated to           |
       | `auxDirName`      | `auxil`       | name of the auxiliary directory, where the auxiliary files will be generated to |
       | `mainTexFileName` | `main`        | name of the main tex file                                                       |
+      | `useBibtex`       | `true`        | use bibtex to resolve bibliography references                                   |
 
 5. **[Optional]** If no changes are made to the bibliography references in development, it is possible to speed up the
    compilation process by using IDEA's run configuration in the `<main>.tex` file instead of the Gradle task `buildPdf`,
