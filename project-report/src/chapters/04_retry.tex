@@ -1,12 +1,13 @@
 \chapter{Retry}\label{ch:retry}
 
-This chapter describes the retry mechanism, its functionality, available configuration and how it was implemented in both the library and as a plugin for the Ktor framework integration.
-
+\resilienceMechanismChapterIntro{Retry}{reactive}
 
 \section{Introduction}\label{sec:retry-context}
 
-The retry mechanism is a \textit{\enquote{resilience pattern that allows an application to handle transient failures when it tries to connect to a service or network resource.
-By transparently retrying a failed operation, the application can improve its stability and availability}}~\cite{microsoft-retry-pattern}.
+The retry mechanism is a \textit{\enquote{resilience pattern
+that allows an application to handle transient failures when it tries to connect to a service or network resource.
+By transparently retrying a failed operation,
+    the application can improve its stability and availability}}~\cite{microsoft-retry-pattern}.
 
 The retry mechanism, as illustrated in Figure~\ref{fig:retry-execution-example},
 is particularly useful when the application is interacting with services that are prone to temporary
@@ -53,21 +54,27 @@ The retry delay strategy defines the amount of time the application should wait 
     \item \textbf{Linear Delay}: Increases the delay duration linearly with each retry attempt.
     The delay is calculated by multiplying the initial delay by the retry attempt number
     (e.g., \texttt{initial delay=1s, attempts=4, result=[1, 2, 3, 4]});
-    \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt, by using the \textit{exponential backoff algorithm}.
+    \item \textbf{Exponential Delay}: This strategy exponentially increases the delay duration with each retry attempt,
+    by using the \textit{exponential backoff algorithm}.
     Essentially, the delay is calculated by multiplying the initial delay by a specified multiplier raised to the power of the retry attempt number (e.g., \texttt{initial delay=1s, multiplier=2, attempts=4, result=[1, 2, 4, 8]});
     \item \textbf{Custom Delay}: This strategy uses a custom function to calculate the delay duration based on the retry attempt number and the last exception caught (if any), allowing for more complex delay strategies (e.g., a delay that increases linearly for the first 3 attempts, then exponentially for the next attempts).
 \end{itemize}
 
-In both linear and exponential delay strategies, a maximum delay can be set to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
+In both linear and exponential delay strategies,
+a maximum delay can be set
+to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
 
-Additionally, introducing a \textit{jitter} can help mitigate the \textit{thundering herd problem} by randomizing the calculated delay duration.
+Additionally,
+introducing a \textit{jitter} can help
+mitigate the \textit{thundering herd problem} by randomizing the calculated delay duration.
 This randomization prevents multiple clients from synchronizing their retries of the same operation,
 thereby spreading out the retries over a period of time.
 
 
 \section{Configuration}\label{sec:retry-configuration}
 
-The retry mechanism can be configured using a dedicated configuration builder with the properties listed in Table~\ref{tab:retry-config-builder}.
+The retry mechanism can be configured
+using a dedicated configuration builder with the properties listed in Table~\ref{tab:retry-config-builder}.
 
 \begin{table}[!htb]
     \centering
@@ -77,10 +84,16 @@ The retry mechanism can be configured using a dedicated configuration builder wi
     \begin{tabular}{|l|p{5cm}|p{6cm}|}
         \hline
         \textbf{Config Property}        & \textbf{Default Value/Behaviour}                                       & \textbf{Description}                                                                            \\ \hline
-        \texttt{maxAttempts}            & \texttt{3}                                                             & The maximum number of attempts (including the initial call as the first attempt).               \\ \hline
-        \texttt{retryPredicate}         & \texttt{throwable -> true}                                             & Predicate to determine if the operation should be retried based on the caught throwable.        \\ \hline
-        \texttt{retryOnResultPredicate} & \texttt{result -> false}                                               & Predicate to determine if the operation should be retried based on the result of the operation. \\ \hline
-        \texttt{delayStrategy}          & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy for calculating delay between retries.                                             \\ \hline
+        \texttt{maxAttempts} & \texttt{3} & The maximum number of attempts
+        (including the initial call as the first attempt). \\ \hline
+        \texttt{retryPredicate} & \texttt{throwable ->
+            true} & Predicate
+        to determine if the operation should be retried based on the caught throwable. \\ \hline
+        \texttt{retryOnResultPredicate} & \texttt{result ->
+            false} & Predicate
+        to determine if the operation should be retried based on the result of the operation. \\ \hline
+        \texttt{delayStrategy} & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy
+        for calculating delay between retries.                                             \\ \hline
         \texttt{resultMapper} & \texttt{Rethrow throwable
         if any or return result unmodified}          & Function
         to map the result or exception after the retry mechanism cannot be used any more to retry an operation                            \\ \hline
@@ -88,12 +101,14 @@ The retry mechanism can be configured using a dedicated configuration builder wi
 \end{table}
 
 The default configuration can be overriden by calling the respective builder methods.
-The values that compose the default configuration are the most common and recommended for most use cases, but they can be adjusted to better suit the application's needs.
+The values that compose the default configuration are the most common and recommended for most use cases,
+but they can be adjusted to better suit the application's needs.
 
 \subsection{Custom Delay Provider}\label{subsec:retry-custom-delay-provider}
 
 A custom delay provider can be used
-to implement a custom delay strategy that differs from the standard delay strategies (see Section~\ref{subsec:retry-delay-strategies}).
+to implement a custom delay strategy that differs from the standard delay strategies
+(see Section~\ref{subsec:retry-delay-strategies}).
 
 A delay strategy determines the next wait time between retry attempts,
 while a delay provider executes the actual waiting period by pausing or blocking
@@ -102,7 +117,8 @@ while a delay provider executes the actual waiting period by pausing or blocking
 For example, for testing purposes, the custom delay provider might be implemented to not delay using real time,
 but instead, immediately continue the execution,
 and only keeping track of the time that would have been spent waiting (virtual time).
-This can be useful for speeding up tests that involve retry mechanisms, as it allows for faster execution without actually waiting for the delay duration.
+This can be useful for speeding up tests that involve retry mechanisms,
+as it allows for faster execution without actually waiting for the delay duration.
 
 A custom delay provider also allows maintaining external state
 (e.g., additional configuration through other dependencies) that can be used to calculate the delay duration,
@@ -116,9 +132,11 @@ which can't be achieved with the standard delay strategies.
 The idea of ignoring exceptions that shouldn't trigger a retry was initially considered,
 by adding an extra configuration property (as offered by Resilience4j~\cite{resilience4j-retry}).
 However, it was decided
-that the retry predicate should be the only policy for determining if an operation should be retried based on the caught exception.
+that the retry predicate should be the only policy
+for determining if an operation should be retried based on the caught exception.
 
-The same idea was applied to the result predicate, which determines if the operation should be retried based on the result of the operation.
+The same idea was applied to the result predicate,
+which determines if the operation should be retried based on the result of the operation.
 
 \subsection{Result Mapper}\label{subsec:retry-result-mapper}
 
@@ -141,7 +159,9 @@ Additionally, the result mapper can be reconfigured per decoration or if ommited
 
 \subsection{Retry Context}\label{subsec:retry-context}
 
-The retry context represents the asynchronous context mechanism's model component implementation (see Section~\ref{subsec:asynchronous-context}), which is responsible for managing the state and controlling the flow of retryable operations.
+The retry context represents the asynchronous context mechanism's model component implementation
+(see Section~\ref{subsec:asynchronous-context}),
+which is responsible for managing the state and controlling the flow of retryable operations.
 It maintains internal state information, such as the number of retry attempts and the last-caught exception,
 and has access to the configuration settings defined for the retry mechanism.
 Additionally, it emits events to potential listeners.
@@ -176,9 +196,11 @@ the operation is considered to have failed.
 
 If the operation eventually succeeds through the retry mechanism, the retry is considered successful.
 In all cases where the retry mechanism cannot be used any more
-(e.g., the maximum number of attempts has been reached), the result mapper is called to map the final result or exception before it is returned to the caller.
+(e.g., the maximum number of attempts has been reached),
+the result mapper is called to map the final result or exception before it is returned to the caller.
 
-This description can be visualized in the retry mechanism execution flow, as illustrated in Figure~\ref{fig:retry-execution-flow}.
+This description can be visualized in the retry mechanism execution flow,
+as illustrated in Figure~\ref{fig:retry-execution-flow}.
 
 \begin{figure}[!htb]
     \centering
@@ -202,7 +224,8 @@ applying configurable retry logic based on conditions such as response status or
 
 Before retrying a request,
 the plugin copies the original request and propagates its completion state to the copy,
-ensuring completion synchronization between the original and the retry request (e.g., if the original request is cancelled, the retry request is also cancelled).
+ensuring completion synchronization between the original and the retry request
+(e.g., if the original request is cancelled, the retry request is also cancelled).
 
 The plugin allows for two levels of configuration:
 
@@ -211,7 +234,8 @@ The plugin allows for two levels of configuration:
     \item \textbf{Per-Request Customization}: The configuration can be overridden for a specific request, allowing for more fine-grained control over the retry logic (e.g., disabling the retry mechanism for a specific request).
 \end{itemize}
 
-A listener to log all events emitted by the retry context is also enabled, which cancels its subscription when the request is completed.
+A listener to log all events emitted by the retry context is also enabled,
+which cancels its subscription when the request is completed.
 
 \subsection{Configuration}\label{subsec:retry-ktor-configuration}
 
@@ -226,11 +250,19 @@ Table~\ref{tab:retry-ktor-config-builder}.
     \begin{tabular}{|l|p{5cm}|p{6cm}|}
         \hline
         \textbf{Config Property}           & \textbf{Default Value/Behaviour}                                                    & \textbf{Description}                                                                                   \\ \hline
-        \texttt{maxAttempts}               & \texttt{3}                                                                          & The maximum number of attempts (including the initial call as the first attempt).                      \\ \hline
-        \texttt{retryOnExceptionPredicate} & \texttt{throwable -> true}                                                          & Predicate to determine if the operation should be retried based on the caught throwable.               \\ \hline
-        \texttt{delayStrategy}             & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy for calculating delay between retries.                                             \\ \hline
-        \texttt{retryOnCallPredicate}      & \texttt{(request, response) -> retries if a 5xx response is received from a server} & Predicate to determine if an HTTP call should be retried based on the respective request and response. \\ \hline
-        \texttt{modifyRequestOnRetry}      & \texttt{(requestBuilder, attempt) -> no-operation} & Callback to modify the request between retries (e.g., add a header with the current attempt number). \\ \hline
+        \texttt{maxAttempts} & \texttt{3} & The maximum number of attempts
+        (including the initial call as the first attempt). \\ \hline
+        \texttt{retryOnExceptionPredicate} & \texttt{throwable ->
+            true} & Predicate
+        to determine if the operation should be retried based on the caught throwable. \\ \hline
+        \texttt{delayStrategy} & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy
+        for calculating delay between retries.                                             \\ \hline
+        \texttt{retryOnCallPredicate} & \texttt{(request, response) ->
+            retries if a 5xx response is received from a server}
+        & Predicate to determine if an HTTP call should be retried based on the respective request and response. \\ \hline
+        \texttt{modifyRequestOnRetry} & \texttt{(requestBuilder, attempt) ->
+            no-operation} & Callback to modify the request between retries
+        (e.g., add a header with the current attempt number). \\ \hline
     \end{tabular}
 \end{table}
 

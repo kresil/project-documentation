@@ -1,0 +1,26 @@
+\chapter{Rate Limiter}\label{ch:rate-limiter}
+
+\resilienceMechanismChapterIntro{Rate Limiter}{proactive}
+
+
+\section{Introduction}\label{sec:rate-limiter-introduction}
+
+The Rate Limiter is a proactive resilience mechanism
+that aims to control the rate at which requests are made to a specific service or resource.
+By imposing a limit on the number of requests within a given time period,
+the Rate Limiter helps to prevent overloading services,
+ensuring stability and availability.
+Rate limiting \textit{\enquote{is often employed to stop bad bots from negatively impacting a website or application.
+Bot attacks that rate limiting can help mitigate include brute force attacks, DoS (denial of service)
+    and DDoS (distributed denial of service) attacks, and web scraping.}}~\cite{cloudflare-rate-limiting}
+
+\subsection{Relation To The Throttling Mechanism}\label{subsec:rate-limiter-throttling}
+
+Rate limiting and throttling are closely related concepts often used interchangeably,
+since both mechanisms control the rate of incoming requests to protect services from being overwhelmed, but they have distinct differences.
+Rate limiting is a broader concept that encompasses various strategies to control the rate of incoming requests, including rejecting requests that exceed the predefined limits.
+Throttling, on the other hand, specifically refers to the process of slowing down the rate of requests rather than outright rejecting them.
+
+Throttling is typically used to ensure that high-priority requests are served first by delaying less critical ones,
+while rate limiting enforces strict limits on the number of requests over a given time period.
+For example, a rate limiter might allow 100 requests per minute from a single IP address, while a throttling mechanism might slow down the request rate after the first 50 requests in a minute but still allow some through.
