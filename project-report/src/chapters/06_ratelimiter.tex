@@ -24,3 +24,38 @@ Throttling, on the other hand, specifically refers to the process of slowing dow
 Throttling is typically used to ensure that high-priority requests are served first by delaying less critical ones,
 while rate limiting enforces strict limits on the number of requests over a given time period.
 For example, a rate limiter might allow 100 requests per minute from a single IP address, while a throttling mechanism might slow down the request rate after the first 50 requests in a minute but still allow some through.
+
+TODO: (explain functionality in detail: refresh period, permits etc..)
+
+\subsection{Rate Limit Exceeded}\label{subsec:rate-limiter-exceeded}
+
+When the rate limit is exceeded during a given refresh period, there are three potential actions to consider:
+\begin{itemize}
+    \item \textbf{Reject}: Immediately deny the request and return an error response message (e.g., throwing an exception), indicating that the rate limit has been reached;
+    \item \textbf{Wait}: Place the request in a queue to be processed later when permits become available, ensuring that it is eventually handled;
+    \item \textbf{Both}: Combine the previous two approaches by placing the request in a queue with a timeout.
+    If the request cannot be processed within the timeout period, it is rejected.
+\end{itemize}
+
+
+\section{Implementation Aspects}\label{sec:rate-limiter-implementation}
+
+\subsection{Components}\label{subsec:rate-limiter-components}
+
+\begin{itemize}
+    \item \textbf{Queue}: To hold requests when the rate limit is exceeded;
+    \item \textbf{Semaphore}: To manage the acquisition and release of permits for requests in a synchronized way.
+    This is used to control access to the shared resources (e.g., the rate-limited service) and is conceptually similar to the token bucket algorithm, where a token represents a permit;
+    \item \textbf{Shared Store}: The \texttt{Queue} and \texttt{Semaphore} components require shared state management (e.g., a database) to ensure consistency across multiple, possibly load-balanced, server instances.
+\end{itemize}
+
+\subsubsection{Additional Details}\label{subsubsec:rate-limiter-details}
+
+\begin{itemize}
+    \item \textbf{Associates a Key with Each Request}: Each request is associated with a key, which determines how the rate limiter handles the request.
+    Requests with the same key are treated as part of the same group and are subject to the same rate limits and queueing rules.
+    For example, if two requests with the same key arrive simultaneously, only one is processed immediately while the other waits in the queue, even if conditions would normally allow both to proceed;
+    \item \textbf{Queue Configuration}: Each request can specify a timeout for how long it is willing to wait in the queue before being rejected.
+    Additionally, the queue length can be configured to specify how many requests of different keys can be waiting to be handled;
+    \item \textbf{Shared State Management and Caller Responsibility}: The logic for acquiring and releasing permits is handled by the caller, which is responsible for interacting with the shared store to ensure the state is updated consistently across all server instances.
+\end{itemize}

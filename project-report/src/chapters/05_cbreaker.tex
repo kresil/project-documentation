@@ -259,9 +259,11 @@ a comparable time marker was used to store the exact time when the circuit break
 This marker is consulted when callers send external events to the reducer component,
 behaving as an internal event.
 If the delay has passed, the circuit breaker transitions, automatically, to the \texttt{HalfOpen} state,
-before attending any external events.
+before attending any external events and potentially ignoring them.
 
-The same approach was used for the \texttt{HalfOpen} state, where the circuit breaker transitions back to the \texttt{Open} state if the maximum wait duration is reached.
+The same approach was used for the \texttt{HalfOpen} state,
+where the circuit breaker transitions back to the \texttt{Open} state
+if the maximum wait duration was specified in the configuration and has passed.
 
 \section{Ktor Integration}\label{sec:cbreaker-ktor-integration}
 
