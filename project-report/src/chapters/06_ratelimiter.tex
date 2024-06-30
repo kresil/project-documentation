@@ -9,18 +9,16 @@ The Rate Limiter is a proactive resilience mechanism
 that aims to control the rate at which requests are made to a service or resource.
 By imposing a limit on the number of requests within a given time period,
 the Rate Limiter helps to prevent overloading downstream services,
-ensuring stability and availability~\cite{microsoft-rate-limiting-pattern,cloudflare-rate-limiting}.
+ensuring stability and availability~\cite{microsoft-rate-limiting-pattern}.
 
-Advantages of using a Rate Limiter include~\cite{solo-io-rate-limiting}:
+Advantages of using a Rate Limiter include~\cite{solo-io-rate-limiting, kong-rate-limiting}:
 
 \begin{itemize}
-    \item \textbf{Prevent DoS Attacks and Web Scraping}:
-    Rate limiting can help protect against denial-of-service (DoS) and distributed denial-of-service (DDoS) attacks and web scraping, making it harder for attackers to overwhelm a service with a high volume of requests.
-    \item \textbf{Manage Resource Utilization}: By controlling the rate of requests, rate limiting helps to manage resource utilization, prevent resource starvation, and ensure that resources are available to all users.
-    \item \textbf{Prevent Abuse}: Stops users from monopolizing resources and prevents excessive or unnecessary requests, ensuring fair resource distribution and optimal network or server performance.
-    \item \textbf{Improve User Experience}: By controlling request rates,
-    rate limiting reduces delays and enhances the responsiveness of the service for legitimate users, improving the overall user experience.
-    \item \textbf{Reduce Costs}: It helps avoid extra costs associated with overloading resources, as limiting request rates reduces the demand on resources and prevents the need for additional capacity.
+    \item \textbf{Prevent malicious activities}: Rate limiting can help protect against brute force, denial-of-service, and distributed denial-of-service (DDoS) attacks, web scraping, and other malicious activities~\cite{cloudflare-rate-limiting};
+    \item \textbf{Manage Resource Utilization}: By controlling the rate of requests, rate limiting helps to manage resource utilization, prevent resource starvation, and ensure that resources are available for all users following predefined SLAs (Service Level Agreements);
+    \item \textbf{Prevent Abuse}: Stops users from monopolizing resources and prevents excessive or unnecessary requests, ensuring fair resource distribution and optimal network or server performance;
+    \item \textbf{Improve User Experience}: Rate limiting reduces delays and enhances the responsiveness of the service for legitimate users, improving the overall user experience;
+    \item \textbf{Reduce Costs}: Helps avoid extra costs associated with overloading resources, as limiting request rates reduces the demand on resources and prevents the need for additional capacity.
 \end{itemize}
 
 \subsection{API Gateway}\label{subsec:rate-limiter-api-gateway}
@@ -46,7 +44,8 @@ whereas throttling is like an adjustable hose nozzle that can be adjusted to con
 
 \subsection{Semaphore}\label{subsec:rate-limiter-semaphore}
 
-A semaphore is a synchronization primitive that restricts the number of simultaneous accesses to a shared resource up to a specified limit.
+A semaphore is a synchronization primitive that restricts the number of simultaneous accesses to a shared resource
+up to a specified limit.
 Key characteristics and operations of a semaphore include~\cite{java-semaphore, oracle-multithreaded-programming-guide}:
 
 \begin{itemize}
@@ -63,7 +62,8 @@ There are two main types of semaphores:
 \begin{itemize}
     \item \textbf{Binary Semaphore}:
     This type has only two states: available (1 permit) and unavailable (0 permits).
-    In literature, it is also misconceptionally known as a mutex (mutual exclusion lock), but differs in ownership.
+    In literature, it is also misconceptionally known as a mutex (mutual exclusion lock),
+    but differs in ownership rights.
     An acquired mutex can only be released by the entity that acquired it, while a semaphore can be signalled by any other entity.
     \item \textbf{Counting Semaphore}: This type can have a count greater than one, allowing multiple entities to acquire permits up to a specified limit.
     It is used for managing access to a resource pool.
@@ -73,8 +73,11 @@ In the context of rate limiting, a semaphore can be used to control the rate of 
 
 \subsection{Rate Limiting Algorithms}\label{subsec:rate-limiter-algorithms}
 
-There are several algorithms that can be used to implement rate limiting,
-each with its own characteristics and trade-offs~\cite{medium-rate-limiting-algorithms,nordic-apis-rate-limiting-algorithms}:
+There are several algorithms that can be used to implement rate limiting, each with benefits and drawbacks to consider.
+Alas,
+the choice of algorithm depends on the specific requirements of the system and the challenges it faces
+(i.e., implementation on a single server or distributed system, handling bursty traffic, etc.)
+~\cite{medium-rate-limiting-algorithms,nordic-apis-rate-limiting-algorithms}:
 
 \subsubsection{Token Bucket}\label{subsubsec:token-bucket-algorithm}
 
@@ -98,20 +101,21 @@ This algorithm can be implemented by a semaphore with no release operation, as t
 
 \subsubsection{Leaky Bucket}\label{subsubsec:leaky-bucket-algorithm}
 
+The leaky bucket algorithm is another rate limiting algorithm used in network traffic management, and is conceptually similar to the token bucket algorithm.
 It is analogous to a bucket with a hole in the bottom that leaks water at a constant rate.
-When water is poured into the bucket, it accumulates up to a certain level before overflowing.
-Independent of the rate at which data is received,
-the leaky bucket algorithm regulates the rate at which data is sent out by leaking it at a constant rate.
-This way maintaining a constant output rate and preventing congestion.
+This algorithm's advantage is that it smooths out bursts of requests and processes them at an approximately constant rate.
+This way smoothing out traffic bursts and preventing congestion.
 
-In contrast to the token bucket algorithm,
-the leaky bucket algorithm does not allow bursts of traffic to be accommodated.
-Instead, it enforces a constant output rate by discarding excess data, which can be a disadvantage in some scenarios.
+However,
+a burst of traffic can starve more recent requests from being processed
+while providing no guarantee that requests get processed in a fixed amount of time.
+Additionally, if you load balance servers for fault tolerance or increased throughput,
+you must use a policy to coordinate and enforce the limit between them~\cite{kong-rate-limiting}.
 
 \subsubsection{Fixed Window Counter}\label{subsubsec:fixed-window-counter-algorithm}
 
-The fixed window counter algorithm is an algorithm
-that counts the number of requests made within discrete, fixed time intervals.
+The fixed window counter algorithm essentially counts the number of requests made within discrete,
+fixed time intervals.
 
 The key features of the fixed window counter algorithm include:
 
@@ -122,12 +126,8 @@ The key features of the fixed window counter algorithm include:
     \item The counter is resetted at the beginning of each time window.
 \end{itemize}
 
-The fixed window counter algorithm is easy to implement but can lead to bursty traffic patterns,
-as requests are not evenly distributed within the time window.
-For example, if the rate limit is 5 requests per minute and a user made 5 requests at the end of the time window,
-they circumvent the rate limit by making 5 more requests at the beginning of the next time window,
-as demonstrated in Figure~\ref{fig:fixed-window-counter-problem}.
-Essentially, violating the rate limit policy by doubling the number of allowed requests.
+The fixed window counter algorithm is easy to implement but can lead to bursty traffic patterns, as requests are not evenly distributed within the time window.
+For example, if the rate limit is 5 requests per minute and a user makes 5 requests at the end of the time window, they can circumvent the limit by making 5 more requests at the beginning of the next time window, effectively doubling the allowed requests as shown in Figure~\ref{fig:fixed-window-counter-problem}.
 
 \begin{figure}[!htb]
     \centering
@@ -137,46 +137,53 @@ Essentially, violating the rate limit policy by doubling the number of allowed r
     \label{fig:fixed-window-counter-problem}
 \end{figure}
 
+Additionally, the fixed window counter algorithm can lead to a stampeding effect,
+where previously rejected requests are retried simultaneously when the time window resets.
+This effect can cause spikes in traffic and overload the system, especially when dealing with a large number of clients.
+
 \subsubsection{Sliding Window Log}\label{subsubsec:sliding-window-log-algorithm}
 
-In contrast to the fixed window counter algorithm, the sliding window log algorithm does not limit the requests based on a fixed time unit.
-Instead, it maintains a continuous record of requests over a rolling time period.
+The sliding window log algorithm maintains a continuous record of requests over a rolling time period.
 
-The key features of the sliding window log algorithm include:
+Key features of the sliding window log algorithm include:
 
 \begin{itemize}
-    \item Tracks requests using a continuously moving window (e.g., last 60 seconds);
-    \item Maintains a log of timestamps for each request within the sliding window;
-    \item When a request is made, it checks the log to determine the number of requests within the current window;
-    \item If the number of requests within the sliding window exceeds the rate limit, the request is rejected;
-    \item The sliding window continuously updates, ensuring smooth rate limiting by taking the previous time interval into account.
+    \item Tracks requests within a continuously moving window (e.g., last 60 seconds);
+    \item Maintains a log of timestamps for each request in the sliding window;
+    \item Checks the log to count the number of requests in the current window whenever a new request is made;
+    \item Helds the request if the count exceeds the rate limit;
 \end{itemize}
 
-The sliding window log algorithm smooths out traffic by avoiding the burstiness issue of fixed windows.
-This is achieved by dynamically adjusting to the actual timing of requests, providing a more even distribution of allowed requests over time.
-However, this algorithm continues to count requests even after the client exceeds the rate limit, which could leave a considerably large memory footprint because it stores a value for every request.
+Unlike the fixed window counter algorithm,
+the sliding window log algorithm provides a more accurate representation of request rates over time,
+and it does not suffer from the boundary conditions of fixed windows.
+However, it can be memory-intensive, as it stores a timestamp for each request, and computationally expensive,
+as each request requires summing up prior requests, which may not scale well with a large number of requests.
 
 \subsubsection{Sliding Window Counter}\label{subsubsec:sliding-window-counter-algorithm}
 
-Similar to the sliding window log algorithm, the sliding window counter algorithm aims to provide smooth rate limiting over a rolling time period.
-However, it differs in implementation by maintaining a count of requests within fixed segments of the sliding window, rather than storing individual request timestamps.
+The sliding window counter algorithm combines the efficiency of the fixed window approach with the accuracy of the sliding log method, providing smooth rate limiting over a rolling time period.
 
-The key features of the sliding window counter algorithm include:
+Key features of the sliding window counter algorithm include:
 
 \begin{itemize}
     \item Divides the time window into smaller fixed segments (e.g., 1-second segments within a 60-second window);
-    \item Maintains a count of requests for each segment;
-    \item When a request is made, it calculates the total number of requests in the current window by summing the counts of the relevant segments;
-    \item If the total number of requests within the sliding window exceeds the rate limit, the request is rejected;
-    \item The sliding window updates by shifting the segments as time progresses, ensuring that the count remains accurate for the current window.
+    \item Tracks the count of requests for each segment;
+    \item Calculates the total number of requests in the current window by summing the counts of the relevant segments;
+    \item Rejects the request if the total number of requests within the sliding window exceeds the rate limit;
+    \item Continuously updates the sliding window by shifting the segments as time progresses, ensuring an accurate count for the current window.
 \end{itemize}
 
-The sliding window counter algorithm offers a more efficient implementation compared to the sliding window log, as it reduces the overhead of maintaining a detailed log of individual request timestamps.
+This hybrid approach smooths out traffic bursts
+by weighting the previous window’s request rate based on the current timestamp,
+similar to the sliding log method
+(e.g., if the current window is 25\% through, the previous window's count is weighted by 75\%).
+The sliding window counter algorithm provides the flexibility to scale rate limiting with good performance, avoiding the starvation problem of the leaky bucket and the burstiness of fixed window implementations~\cite{kong-rate-limiting}.
 
 \subsection{Rate Limit Exceeded}\label{subsec:rate-limiter-exceeded}
 
 Rate limiting algorithms can deploy different strategies for handling requests when the rate limit is exceeded.
-There are several strategies that can be used to manage requests when the rate limit is exceeded, including:
+The most common approaches include:
 
 \begin{itemize}
     \item \textbf{Reject}: Immediately deny the request and return an error response message (e.g., throwing an exception,
@@ -186,22 +193,89 @@ There are several strategies that can be used to manage requests when the rate l
     If the request cannot be processed within the timeout period, it is rejected.
 \end{itemize}
 
+\subsection{Distribution}\label{subsec:rate-limiter-distribution}
 
-\section{Configuration}\label{sec:rate-limiter-configuration}
+In a distributed system,
+rate limiting can be challenging due to the need
+to maintain consistency across multiple instances of the rate-limited service.
+One simple way to enforce the limit is
+to set up sticky sessions in your load balancer so that each consumer gets sent to exactly one node.
+However, this approach has several disadvantages,
+including a lack of fault tolerance and scaling problems when nodes get overloaded~\cite{kong-rate-limiting}.
 
-TODO()
+A better option is to use a centralized data store (e.g., a database) to store the rate limit state,
+allowing all instances of the service to access and update the state in a consistent manner.
+This approach has the disadvantage
+of introducing additional latency due to network communication with the data store and race conditions when
+multiple instances try to update the state simultaneously.
+
+A naive approach to distributed rate limiting is to use a `get-then-set' approach,
+where the rate limit state is read from the data store, incremented, and then written back.
+The issue with this model is that during the read-increment-store cycle, additional requests may arrive, leading each to attempt storing an incremented counter value, potentially resulting in an invalid (lower) counter value. This can enable consumers to send a high rate of requests, bypassing rate limiting controls~\cite{kong-rate-limiting}.
+
+A few solutions arise to address these challenges:
+
+\begin{itemize}
+    \item \textbf{Locks}: Prevent concurrent access to the rate limit state by using locks to synchronize access.
+    However, locks can introduce performance bottlenecks in high-concurrency scenarios;
+    \item \textbf{Atomic Operations}:
+    Use atomic operations provided by the data store to increment and check counters efficiently.
+    Using more of the `set-then-get' approach can reduce the number of round trips to the data store;
+\end{itemize}
+
+To minimize latency introduced by using a centralized data store,
+rate limit checks can be performed locally in memory with an eventually consistent model as shown in Figure~\ref{fig:distributed-rate-limiting-centralized}.
+Each node periodically syncs with the centralized store,
+pushing counter-increments and retrieving updated values (to update the local cache).
+\textit{\enquote{The periodic rate at which nodes converge should be configurable. Shorter sync intervals will result in less divergence of data points when spreading traffic across multiple nodes in the cluster (e.g., when sitting behind a round robin balancer). Whereas longer sync intervals put less read/write pressure on the datastore and less overhead on each node to fetch new synced values}}~\cite{kong-rate-limiting}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/06_distributed_rate_limiting}
+    \caption{Distributed Rate Limiting with a Centralized Data Store.
+    Retrieved from~\cite{kong-rate-limiting}}.
+    \label{fig:distributed-rate-limiting-centralized}
+\end{figure}
 
 \section{Implementation Aspects}\label{sec:rate-limiter-implementation}
 
-TODO(revisit)
+TODO(what aspects went to the design and implementation aspects were considered)
 
 \subsection{Available Solutions}\label{subsec:rate-limiter-solutions}
 
-TODO()
+Resilience4j provides two rate limiting implementations:
+\begin{itemize}
+    \item \texttt{AtomicRateLimiter}: A rate limiter that uses an atomic counter to control the rate of requests.
+    It is based on the token bucket algorithm and can be configured with a refresh period to refill the bucket.
+    \item \texttt{SemaphoreBasedRateLimiter}:
+    A rate limiter that uses a semaphore to control the rate of requests and a scheduler to refill the semaphore.
+\end{itemize}
 
-\subsection{Distribution}\label{subsec:rate-limiter-distribution}
+Polly provides a thin layer over the .NET \texttt{System.Threading.RateLimiting}~\cite{microsoft-rate-limiting-dotnet} package,
+which includes the following rate limiting implementations:
+\begin{itemize}
+    \item \texttt{TokenBucketRateLimiter}: Implements a token bucket algorithm to limit the rate of requests. Tokens are added to the bucket at a steady rate, and each request consumes a token. If no tokens are available, the request is denied or queued until tokens become available;
+    \item \texttt{FixedWindowRateLimiter}: Uses a fixed window algorithm where requests are counted within fixed time intervals (windows);
+    If the number of requests exceeds the limit for a window, further requests are denied until the next window.
+    \item \texttt{SlidingWindowRateLimiter}: Employs a sliding window algorithm to provide smoother rate limiting by tracking requests over a rolling time period, rather than fixed intervals. This helps in avoiding bursts of traffic that occur at the boundary of fixed windows;
+    \item \texttt{ConcurrencyLimiter}: Limits the number of concurrent requests. It uses a semaphore to restrict the number of simultaneous operations, ensuring that only a certain number of requests can be processed concurrently;
+    \item \texttt{PartionedRateLimiter}: Allows rate limiting based on different keys or partitions.
+    This is useful when you want to apply different rate limits to different groups of requests or users.
+    \item \texttt{ChainedPartitionedRateLimiter}:
+    Chains multiple rate limiters together to provide a cascading rate limiting strategy.
+    If one rate limiter fails, all previously acquired permits are released, ensuring atomicity in rate limiting decisions.
+\end{itemize}
 
-TODO()
+Additionally,
+the package also provides options
+to configure the rate limiter with custom policies for handling rate limit exceeded scenarios,
+the most notable being the queue processing strategy
+(e.g., newest first, oldest first, etc.) and auto replenishment of permits (i.e., if disabled, the replenishment must be done manually).
+
+Polly also provides a \texttt{LockFreeTokenBucketRateLimiter} implementation
+that uses a lock-free algorithm to manage the token bucket,
+improving performance in high-throughput scenarios.
+Furthermore, the \texttt{RateLimiter} strategy can be used in two flavors: to control inbound load via a rate limiter and to control outbound load via a concurrency limiter.
 
 
 \subsection{Components}\label{subsec:rate-limiter-components}
@@ -210,6 +284,10 @@ TODO()
     \item \textbf{Semaphore}: To manage the acquisition and release of permits for requests in a synchronized way.
     This is used to control access to the shared resources (e.g., the rate-limited service) and is conceptually similar to the token bucket algorithm, where a token represents a permit;
     \item \textbf{Queue}: To hold requests when the rate limit is exceeded;
-    \item \textbf{Shared Store}: The \texttt{Queue} and \texttt{Semaphore} components require shared state management (e.g., a database) to ensure consistency across multiple, possibly load-balanced, server instances.
+    \item \textbf{Centralized Data Store}: The \texttt{Queue} and \texttt{Semaphore} components require a centralized state management (e.g., a database) to ensure consistency across multiple, possibly load-balanced, instances of the rate-limited service.
 \end{itemize}
 
+
+\section{Configuration}\label{sec:rate-limiter-configuration}
+
+TODO(all mechanisms configuration should be after the implementation description, alter this)
