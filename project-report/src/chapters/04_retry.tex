@@ -71,38 +71,7 @@ This randomization prevents multiple clients from synchronizing their retries of
 thereby spreading out the retries over a period of time.
 
 
-\section{Configuration}\label{sec:retry-configuration}
-
-The retry mechanism can be configured
-using a dedicated configuration builder with the properties listed in Table~\ref{tab:retry-config-builder}.
-
-\begin{table}[!htb]
-    \centering
-    \caption{Configuration Properties for \texttt{RetryConfigBuilder}}
-    \label{tab:retry-config-builder}
-    \vspace{0.3cm}
-    \begin{tabular}{|l|p{5cm}|p{6cm}|}
-        \hline
-        \textbf{Config Property}        & \textbf{Default Value/Behaviour}                                       & \textbf{Description}                                                                            \\ \hline
-        \texttt{maxAttempts} & \texttt{3} & The maximum number of attempts
-        (including the initial call as the first attempt). \\ \hline
-        \texttt{retryPredicate} & \texttt{throwable ->
-            true} & Predicate
-        to determine if the operation should be retried based on the caught throwable. \\ \hline
-        \texttt{retryOnResultPredicate} & \texttt{result ->
-            false} & Predicate
-        to determine if the operation should be retried based on the result of the operation. \\ \hline
-        \texttt{delayStrategy} & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy
-        for calculating delay between retries.                                             \\ \hline
-        \texttt{resultMapper} & \texttt{Rethrow throwable
-        if any or return result unmodified}          & Function
-        to map the result or exception after the retry mechanism cannot be used any more to retry an operation                            \\ \hline
-    \end{tabular}
-\end{table}
-
-The default configuration can be overriden by calling the respective builder methods.
-The values that compose the default configuration are the most common and recommended for most use cases,
-but they can be adjusted to better suit the application's needs.
+\section{Implementation Aspects}\label{sec:retry-implementation-aspects}
 
 \subsection{Custom Delay Provider}\label{subsec:retry-custom-delay-provider}
 
@@ -123,9 +92,6 @@ as it allows for faster execution without actually waiting for the delay duratio
 A custom delay provider also allows maintaining external state
 (e.g., additional configuration through other dependencies) that can be used to calculate the delay duration,
 which can't be achieved with the standard delay strategies.
-
-
-\section{Implementation Aspects}\label{sec:retry-implementation-aspects}
 
 \subsection{Ignoring Exceptions}\label{subsec:retry-ignoring-exceptions}
 
@@ -172,12 +138,12 @@ allowing it to access the context and potentially alter its behaviour based on i
 
 \subsubsection{Event Emission}\label{subsubsec:retry-context-event-emission}
 
-The retry context emits the following events, when the operation:
+The retry context emits the following events when the operation:
 
 \begin{itemize}
-    \item has succeeded and the retry mechanism is no longer needed;
-    \item is about to be retried;
-    \item has failed, and the retry mechanism cannot be used any more.
+    \item Has succeeded and the retry mechanism is no longer needed;
+    \item Is about to be retried;
+    \item Has failed, and the retry mechanism cannot be used any more.
     Two different event types can be emitted in this case based on if the last-caught exception was expected or not.
 \end{itemize}
 
@@ -208,6 +174,37 @@ as illustrated in Figure~\ref{fig:retry-execution-flow}.
     \caption{Retry Mechanism Execution Flow}
     \label{fig:retry-execution-flow}
 \end{figure}
+
+
+\section{Configuration}\label{sec:retry-configuration}
+
+\resilienceMechanismConfigIntroToTable{Retry}~\ref{tab:retry-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{RetryConfigBuilder}}
+    \label{tab:retry-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property} & \textbf{Default Value/Behaviour} & \textbf{Description} \\ \hline
+        \texttt{maxAttempts} & \texttt{3} & The maximum number of attempts
+        (including the initial call as the first attempt). \\ \hline
+        \texttt{retryPredicate} & \texttt{throwable ->
+            true} & Predicate
+        to determine if the operation should be retried based on the caught throwable. \\ \hline
+        \texttt{retryOnResultPredicate} & \texttt{result ->
+            false} & Predicate
+        to determine if the operation should be retried based on the result of the operation. \\ \hline
+        \texttt{delayStrategy} & \texttt{Exponential[ initialDelay=500ms, multiplier=2.0, maxDelay=1m]}          & The strategy
+        for calculating delay between retries.                                             \\ \hline
+        \texttt{exceptionHandler} & \texttt{Rethrow throwable
+        if any} & The handler for exceptions that occur during a retry operation. \\ \hline
+    \end{tabular}
+\end{table}
+
+
+\resilienceMechanismDefaultConfig
 
 
 \section{Ktor Integration}\label{sec:retry-ktor-integration}

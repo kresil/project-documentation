@@ -2,6 +2,7 @@
 
 \resilienceMechanismChapterIntro{Circuit Breaker}{reactive}
 
+
 \section{Introduction}\label{sec:cbreaker-introduction}
 
 The circuit breaker mechanism is a \textit{\enquote{resilience pattern
@@ -123,43 +124,6 @@ As newer results are recorded, older results are removed from the window, keepin
 LIFO (Last In, First Out) order.
 This approach ensures that the window size remains constant and that the circuit breaker can make decisions based on the most recent data.
 
-
-\section{Configuration}\label{sec:cbreaker-configuration}
-
-The retry mechanism can be configured
-using a dedicated configuration builder with the properties listed in Table~\ref{tab:cbreaker-config-builder}.
-
-\begin{table}[!htb]
-    \centering
-    \caption{Configuration Properties for \texttt{CircuitBreakerConfigBuilder}}
-    \label{tab:cbreaker-config-builder}
-    \vspace{0.3cm}
-    \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
-        \hline
-        \textbf{Config Property}          & \textbf{Default Value/Behaviour} & \textbf{Description}                                                                                                                                        \\ \hline
-        \texttt{failureRateThreshold}     & \texttt{0.5}                     & The rate in percentage of calls recorded as failures that will trigger the circuit breaker to transition to the \texttt{Open} state if equaled or exceeded. \\ \hline
-        \texttt{permittedNumberOfCalls InHalfOpenState} & \texttt{10} & The number of calls
-        allowed in the \texttt{HalfOpen} state. \\ \hline
-        \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration
-        the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning back to the \texttt{Open} state.
-        If set to \texttt{0}, it waits indefinitely until all permitted calls are executed. \\ \hline
-        \texttt{slidingWindow} & \texttt{SlidingWindow[ size=100, minimumThroughput=100, type=COUNT\_BASED]}
-        & Configures the sliding window used to record calls and calculate the failure rate.
-        Minimum throughput is the minimum number of calls
-        that must be recorded before the failure rate is calculated.
-        \\ \hline
-        \texttt{delayStrategyInOpenState} & \texttt{Constant[ delay=1m]}     & The strategy used to determine the duration the circuit breaker will remain in the \texttt{Open} state before transitioning to the \texttt{HalfOpen} state. \\ \hline
-        \texttt{recordExceptionPredicate} & \texttt{throwable ->
-            true} & Predicate
-        to determine if an exception thrown by the underlying operation should be recorded as a failure, and as such, increase the failure rate. \\ \hline
-        \texttt{recordResultPredicate} & \texttt{result ->
-            false} & Predicate
-        to determine if the result of the underlying operation should be recorded as a failure, and as such, increase the failure rate. \\ \hline
-    \end{tabular}
-\end{table}
-
-The default configuration can be overriden by calling the respective builder methods.
-The values that compose the default configuration are the most common and recommended for most use cases, but they can be adjusted to better suit the application's needs.
 
 \section{Implementation Aspects}\label{sec:cbreaker-implementation-aspects}
 
@@ -288,12 +252,50 @@ Effectively resetting the circuit breaker to its initial state.
 The circuit breaker emits events to notify listeners when:
 
 \begin{itemize}
-    \item a call is rejected;
-    \item the underlying operation is executed.
+    \item A call is rejected;
+    \item The underlying operation is executed.
     Two different event types can be emitted in this case based on the operation's success or failure;
-    \item the circuit breaker state changes manually or automatically.
-    \item the circuit breaker is reset.
+    \item The circuit breaker state changes manually or automatically.
+    \item The circuit breaker is reset.
 \end{itemize}
+
+
+\section{Configuration}\label{sec:cbreaker-configuration}
+
+\resilienceMechanismConfigIntroToTable{Circuit Breaker}~\ref{tab:cbreaker-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{CircuitBreakerConfigBuilder}}
+    \label{tab:cbreaker-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}          & \textbf{Default Value/Behaviour} & \textbf{Description}                                                                                                                                        \\ \hline
+        \texttt{failureRateThreshold}     & \texttt{0.5}                     & The rate in percentage of calls recorded as failures that will trigger the circuit breaker to transition to the \texttt{Open} state if equaled or exceeded. \\ \hline
+        \texttt{permittedNumberOfCalls InHalfOpenState} & \texttt{10} & The number of calls
+        allowed in the \texttt{HalfOpen} state. \\ \hline
+        \texttt{maxWaitDurationInHalf OpenState} & \texttt{0} & The maximum duration
+        the circuit breaker will wait in the \texttt{HalfOpen} state before transitioning back to the \texttt{Open} state.
+        If set to \texttt{0}, it waits indefinitely until all permitted calls are executed. \\ \hline
+        \texttt{slidingWindow} & \texttt{SlidingWindow[ size=100, minimumThroughput=100, type=COUNT\_BASED]}
+        & Configures the sliding window used to record calls and calculate the failure rate.
+        Minimum throughput is the minimum number of calls
+        that must be recorded before the failure rate is calculated.
+        \\ \hline
+        \texttt{delayStrategyInOpenState} & \texttt{Constant[ delay=1m]}     & The strategy used to determine the duration the circuit breaker will remain in the \texttt{Open} state before transitioning to the \texttt{HalfOpen} state. \\ \hline
+        \texttt{recordExceptionPredicate} & \texttt{throwable ->
+            true} & Predicate
+        to determine if an exception thrown by the underlying operation should be recorded as a failure, and as such, increase the failure rate. \\ \hline
+        \texttt{recordResultPredicate} & \texttt{result ->
+            false} & Predicate
+        to determine if the result of the underlying operation should be recorded as a failure, and as such, increase the failure rate. \\ \hline
+        \texttt{exceptionHandler} & \texttt{Rethrow throwable
+        if any} & The handler for exceptions that occur during a call through the circuit breaker. \\ \hline
+    \end{tabular}
+\end{table}
+
+\resilienceMechanismDefaultConfig
 
 
 \section{Ktor Integration}\label{sec:cbreaker-ktor-integration}

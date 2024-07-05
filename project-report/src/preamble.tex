@@ -38,3 +38,13 @@
 \newcommand{\resilienceMechanismChapterIntro}[2]{
     This chapter provides an in-depth look at the #1 #2 resilience mechanism, explaining the problems it aims to solve and how it addresses them through its functionality. It also covers available configurations and implementation details, providing explanations for both the library version and its integration as a plugin within the Ktor framework.
 }
+
+\newcommand{\resilienceMechanismConfigIntroToTable}[1]{
+    The #1 mechanism can be configured using a dedicated configuration builder with the properties listed in Table
+}
+
+\newcommand{\resilienceMechanismDefaultConfig}{
+    The default configuration can be overriden by calling the respective builder methods.
+    The values that compose the default configuration are the most common and recommended for most use cases,
+    but they can be adjusted to better suit the application's needs.
+}
