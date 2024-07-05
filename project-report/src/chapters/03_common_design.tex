@@ -1,6 +1,7 @@
 \chapter{Common Design and Implementation Strategy}\label{ch:design-implementation}
 
-This chapter outlines the shared design principles of the implemented mechanisms and the development approach used to integrate them with Ktor.
+This chapter outlines the shared design principles of the implemented mechanisms and the development approach
+used to integrate them with the Ktor framework.
 A comprehensive review and analysis of existing mechanism implementations~\ref{sec:related-work} were conducted
 to identify common design elements and relevant features that could be incorporated into the design of the mechanisms implemented in this project.
 
@@ -145,6 +146,7 @@ Each mechanism implementation has two ways to register listeners for events:
 The implementation also provides a way to cancel all registered listeners by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
 However, the cancellation of the registered listeners up to a given time does not affect later registrations.
 
+
 \section{Decoration}\label{sec:decoration}
 
 In mathematics,
@@ -192,6 +194,33 @@ meaning that the operations would have access to the mechanism's execution conte
 
 As a result, and to maintain backwards compatibility with the existing operation types (which allowed for method references~\cite{java-method-references} to be decorated), a new family of operation types was created with a \texttt{Ctx} prefix (e.g., \texttt{CtxSupplier}).
 These new operation types receive the mechanism's execution context as an additional argument.
+
+
+\section{Exception Handling}\label{sec:exception-handling}
+
+In order to not enforce a specific exception handling strategy on the caller (e.g., always rethrowing exceptions),
+the mechanisms were designed to allow the caller to specify how caught exceptions should be handled.
+
+For each mechanism,
+the caller can provide an exception handler that is invoked when an exception occurs during the mechanism's execution.
+By default, the exception handler rethrows the exception,
+but the caller can provide a custom exception handler to handle the exception in a different way
+(e.g., logging the exception, mapping it to a different exception type, etc.).
+
+
+\section{Time Measurement}\label{sec:time-measurement}
+
+Time is a critical aspect of most mechanisms, as they often rely on time-based policies (e.g., wait duration, time window, etc.) to determine their behavior.
+
+To ensure the accuracy and reliability of these time-based policies,
+the mechanisms use a comparable time mark with a monotonic time source to represent a snapshot of a point in time.
+A monotonic time source continuously increases and is not affected by system clock changes (e.g., time adjustments, time zone changes, etc.) which can occur with real-time clocks.
+
+With a given time mark,
+the mechanisms can accurately measure time by retrieving the elapsed time between two time marks,
+and apply time-based policies accordingly.
+This strategy avoids the need to launch a thread or coroutine just to
+measure elapsed time, which could introduce unnecessary overhead.
 
 
 \section{Ktor Integration}\label{sec:ktor-integration}
