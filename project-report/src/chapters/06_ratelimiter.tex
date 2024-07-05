@@ -207,7 +207,9 @@ avoiding the starvation problem of the leaky bucket and the burstiness at the bo
 
 \subsection{Rate Limit Exceeded}\label{subsec:rate-limiter-exceeded}
 
-Rate limiting algorithms can deploy different strategies for handling requests when the rate limit is exceeded.
+Rate limiting algorithms can be configured
+to deploy different strategies for handling requests when the rate limit is exceeded
+(rate-limited requests).
 The most common approaches include:
 
 \begin{itemize}
@@ -373,6 +375,8 @@ However,
 the API is designed to allow replacement with a distributed data store
 (e.g., Redis, Cassandra) to ensure consistency across multiple instances of the rate-limited service.
 
+TODO(drawing for keyed rate limiter)
+
 \subsection{Disposable Resource}\label{subsec:rate-limiter-disposable-resource}
 
 In certain implementations, the rate limiter may need to manage resources that require proper cleanup when they are no longer needed.
@@ -393,7 +397,7 @@ With this information,
 an (outer) retry mechanism can be configured in the pipeline before the
 (inner) rate limiter to retry the request after the recommended duration.
 
-TODO (make drawings for the Fixed Window Counter and Sliding Window Counter algorithms)
+TODO (make drawings for the Fixed Window Counter and Sliding Window Counter algorithms retry after duration)
 
 \subsection{Dynamic Configuration}\label{subsec:rate-limiter-dynamic-configuration}
 
@@ -416,13 +420,34 @@ it can be challenging to ensure that configuration changes are propagated consis
 The rate limiter emits events to notify listeners when a request to a rate-limited service:
 
 \begin{itemize}
-    \item has succeeded to be processed;
-    \item has been rate-limited.
-    Two different event types can be emitted in this case based on if the request was rejected or queued;
+    \item Has succeeded to be processed;
+    \item Has been rate-limited.
+    Two different event types can be emitted in this case based on if the request was immediately rejected or queued.
 \end{itemize}
 
 
 \section{Configuration}\label{sec:rate-limiter-configuration}
+
+\resilienceMechanismConfigIntroToTable{Rate Limiter}~\ref{tab:ratelimiter-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{RateLimiterConfigBuilder}}
+    \label{tab:ratelimiter-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property} & \textbf{Default Value/Behaviour}                                                   & \textbf{Description}                               \\ \hline
+        \texttt{algorithm}       & \texttt{FixedWindowCounter[ totalPermits=1000, replenishPeriod=1m, queueLength=0]} & The rate limiting algorithm and its configuration.                                                                                                         \\ \hline
+        \texttt{baseTimeoutDuration} & \texttt{1s} & The default duration a request will be placed in the queue
+        if rate-limited.
+        After this duration, the request will be rejected. \\ \hline
+        \texttt{onRejected} & \texttt{Rethrow throwable
+        if any} & The exception handler that will be called when a request is rejected by the rate limiter. \\ \hline
+    \end{tabular}
+\end{table}
+
+\resilienceMechanismDefaultConfig
 
 
 \section{Ktor Integration}\label{sec:rate-limiter-ktor-integration}
