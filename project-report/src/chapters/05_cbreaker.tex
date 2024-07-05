@@ -204,9 +204,22 @@ in order to delegate the state transitions and mutual exclusion to a single comp
 The reducer pattern is a design pattern
 that allows the state of a system
 to be managed by a single reducer function
-that takes the current state and an action/event as input and returns the new state, as illustrated in Figure~\ref{fig:reducer-pattern}.
+that takes the current state and an action as input and returns the new state.
 It is a common pattern in the Redux~\cite{redux} state management library and the React~\cite{react-use-reducer} library,
 both widely used in the JavaScript ecosystem.
+
+As illustrated in Figure~\ref{fig:reducer-pattern}, the reducer pattern has the following characteristics:
+
+\begin{itemize}
+    \item \textbf{State} - The state of the system is stored in a single immutable object and can be consulted as a snapshot of the system at any point in time;
+    \item \textbf{Action} - An event that potentially triggers a state transition;
+    \item \textbf{Dispatch} - A function that sends an action to the reducer to trigger a state transition.
+    In more complex scenarios, it can also dispatch multiple actions based on a single received action, and handle side effects;
+    \item \textbf{Reducer} - A function that takes the current state and an action as input and returns the new state and a list of effects to be executed outside the reducer.
+    Must be a pure function, meaning it must not have side effects and return the same output for the same input (deterministic).
+    \item \textbf{Effect} -
+    Represents a potential side effect that is returned by the reducer as an event and handled by the dispatcher (e.g., logging, fetching external data).
+\end{itemize}
 
 \begin{figure}[!htb]
     \centering
@@ -214,16 +227,6 @@ both widely used in the JavaScript ecosystem.
     \caption{State Reducer Pattern.}
     \label{fig:reducer-pattern}
 \end{figure}
-
-The reducer pattern has the following characteristics:
-
-\begin{itemize}
-    \item \textbf{State} - The state of the system is stored in a single immutable object and can be consulted as a snapshot of the system at any point in time;
-    \item \textbf{Action} - An event that potentially triggers a state transition;
-    \item \textbf{Dispatch} - A function that sends an action to the reducer to trigger a state transition;
-    \item \textbf{Reducer} - A function that takes the current state and an action as input and returns the new state.
-    Must be a pure function, meaning it must not have side effects and return the same output for the same input (deterministic).
-\end{itemize}
 
 \subsection{Sliding Window}\label{subsec:cbreaker-sliding-window}
 
@@ -263,22 +266,52 @@ before attending any external events and potentially ignoring them.
 
 The same approach was used for the \texttt{HalfOpen} state,
 where the circuit breaker transitions back to the \texttt{Open} state
-if the maximum wait duration was specified in the configuration and has passed.
+if the maximum wait duration, specified in the configuration, has passed.
+
+\subsection{Manual State Transition and Reset}\label{subsec:cbreaker-manual-state-transition}
+
+In later stages of the implementation, the circuit breaker was extended to override the current state with a new state,
+by allowing the caller to perform a manual state transition.
+This feature was considered useful for testing, debugging,
+and maintenance purposes (e.g., maintain the circuit breaker in the \texttt{Closed} state to only record the operation's execution results).
+It's worth noting that a manual state transition maintains the same behaviour as an automatic state transition,
+and won't perform any additional actions.
+For example,
+a transition from the \texttt{HalfOpen} state to the \texttt{Open} state will advance the delay strategy attempt counter by one.
+
+A reset, however, places the circuit breaker in the \texttt{Closed} state,
+clearing the sliding window and resetting the failure rate.
+Effectively resetting the circuit breaker to its initial state.
+
+\subsection{Event Emission}\label{subsec:cbreaker-event-emission}
+
+The circuit breaker emits events to notify listeners when:
+
+\begin{itemize}
+    \item a call is rejected;
+    \item the underlying operation is executed.
+    Two different event types can be emitted in this case based on the operation's success or failure;
+    \item the circuit breaker state changes manually or automatically.
+    \item the circuit breaker is reset.
+\end{itemize}
+
 
 \section{Ktor Integration}\label{sec:cbreaker-ktor-integration}
 
 The circuit breaker mechanism was integrated with Ktor by implementing a custom plugin that can be added to the application's Ktor pipeline, using the implemented circuit breaker mechanism.
 
-\subsection{Plugin Implementation}\label{subsec:circuit-breaker-plugin}
+\subsection{Plugin Implementation}\label{subsec:cbreaker-plugin}
 
 The plugin was designed for Ktor clients to wire the circuit breaker mechanism to the HTTP client pipeline.
 The circuit breaker plugin will act before the request is sent to the server,
 consulting the circuit breaker state to determine if the request should be executed and after the response is received,
 recording the result of the operation.
+Depending on the result, the circuit breaker records the operation as a success or failure.
 
-A listener to log all events emitted by the circuit breaker context is also enabled, which cancels its subscription when the request is completed.
+A listener to log all events emitted by the circuit breaker context is also enabled, which cancels its subscription
+when the request is completed.
 
-\subsection{Configuration}\label{subsec:circuit-breaker-configuration}
+\subsection{Configuration}\label{subsec:cbreaker-configuration}
 
 The circuit breaker Ktor plugin can be configured
 by using a dedicated configuration builder with the properties listed in Table~\ref{tab:circuit-breaker-config-builder}.
@@ -310,5 +343,5 @@ by using a dedicated configuration builder with the properties listed in Table~\
 Additionally, methods relevant to an HTTP context were added to the configuration builder to simplify the configuration process:
 
 \begin{itemize}
-    \item \texttt{recordFailureOnServerErrors}: Records server responses with status codes in the range 500-599 as failures;
+    \item \texttt{recordFailureOnServerErrors}: Records server responses with status codes in the range 500-599 as failures.
 \end{itemize}

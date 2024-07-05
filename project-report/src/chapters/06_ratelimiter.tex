@@ -327,7 +327,10 @@ These same threads will delegate the completion of the requests to another threa
 while keeping a local reference to it.
 This in turn will enable the synchronizer to resume its functions without waiting for the requests to be completed.
 
-The mentioned local reference is what enables the thread to not lose track of the synchronizer state that it was waiting upon. Whereas, in the monitor-style synchronization, such state could be potentially lost since the thread, when awakened, has to recheck the state of the synchronizer which could have changed in the meantime.
+The mentioned local reference is what
+enables the thread to not lose track of the synchronizer state that it was waiting upon.
+Whereas, in the monitor-style synchronization, such state could be potentially lost since the thread,
+when awakened, has to recheck it which could have changed in the meantime.
 
 \subsubsection{Algorithm Template}\label{subsubsec:rate-limiter-algorithm-template}
 
@@ -394,21 +397,21 @@ TODO (make drawings for the Fixed Window Counter and Sliding Window Counter algo
 
 \subsection{Dynamic Configuration}\label{subsec:rate-limiter-dynamic-configuration}
 
-Modern rate limiters often need to adapt to changing conditions and requirements dynamically. Dynamic configuration allows modifying the rate limiter's behavior at runtime.
+Modern rate limiters often need to adapt to changing conditions and requirements dynamically.
+Dynamic configuration allows modifying the rate limiter's behavior at runtime.
 
 A challenge arises when changing the rate limiter's configuration dynamically: such changes can only take effect in
 the next replenishment period.
 If applied immediately, the retry-after policy, for example, would be inconsistent with the new configuration,
 causing previously rate-limited requests to retry based on outdated information.
 
-To address this, the rate limiter provides mechanisms to update the configuration dynamically, including the replenishment period and the total number of permits.
-These changes ensure that new configurations are applied consistently and take effect in the next cycle, maintaining the integrity of the retry-after policy.
+To address this challenge, the rate limiter provides mechanisms to update the configuration dynamically, including the
+replenishment period and the total number of permits.
 
-Additionally,
-it's worth noting that in distributed environments that use an eventually consistent model for rate limiting,
+Additionally, it's worth noting that in distributed environments that use an eventually consistent model for rate limiting,
 it can be challenging to ensure that configuration changes are propagated consistently across all nodes.
 
-\subsubsection{Event Emission}\label{subsubsec:rate-limiter-event-emission}
+\subsection{Event Emission}\label{subsec:rate-limiter-event-emission}
 
 The rate limiter emits events to notify listeners when a request to a rate-limited service:
 
@@ -420,3 +423,16 @@ The rate limiter emits events to notify listeners when a request to a rate-limit
 
 
 \section{Configuration}\label{sec:rate-limiter-configuration}
+
+
+\section{Ktor Integration}\label{sec:rate-limiter-ktor-integration}
+
+TODO()
+
+\subsection{Plugin Implementation}\label{subsec:rate-limiter-plugin}
+
+TODO()
+
+\subsection{Configuration}\label{subsec:rate-limiter-configuration}
+
+TODO()

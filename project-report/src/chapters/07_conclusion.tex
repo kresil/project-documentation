@@ -60,11 +60,17 @@ The following are some possible future work that can be done to enhance the libr
     where multiple mechanisms can be attached in a specific order to handle different scenarios (e.g., combine an outer retry with an inner rate limiter, to retry after a request is rejected due to rate limiting);
     \item \textbf{Adapter for JavaScript}: Implement an adapter to call the library from JavaScript code.
     As the current implementation of the library is only usable in Kotlin code, an adapter is needed to make it accessible from JavaScript code;
-    \item \textbf{Chaos Engineering}: Besides unit and integration tests, implement a Chaos Engineering module to test the resilience of the system under controlled conditions.
+    \item \textbf{Chaos Engineering}: Besides unit, integration and possibly functional tests, implement a Chaos Engineering module to test the resilience of the system under controlled conditions.
     \item \textbf{Documentation and Examples}:
     Improve the documentation
     and provide more examples to help developers understand and use the library effectively.
     A website or a dedicated page should be created
     to host these resources.
     A documentation engine such as Dokka~\cite{dokka} could be used to generate an additional documentation API website.
+    \item \textbf{CI/CD Optimization}:
+    Optimize the CI/CD pipeline by integrating tools like Dependabot~\cite{github-dependabot} to receive notifications and updates on the dependencies used in the project and other tools to enhance the development workflow;
+    \item \textbf{Selective Dependency Import}:
+    Offer the option to import one or more mechanisms as dependencies, rather than requiring all of them.
+    This will allow developers to include only the necessary parts of the library, enhancing modularity and reducing the application's footprint.
+    The same approach should be applied to the respective Ktor plugins.
 \end{itemize}
