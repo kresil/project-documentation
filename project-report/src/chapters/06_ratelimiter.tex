@@ -123,7 +123,7 @@ This algorithm can be implemented by a semaphore with no release operation, as t
 
 The leaky bucket algorithm is another rate limiting algorithm used in network traffic management, and is conceptually similar to the token bucket algorithm.
 This algorithm's advantage is that it smooths out bursts of requests
-and processes them at an approximately constant rate. It is analogous to a bucket with a hole in the bottom that leaks water at a constant rate.
+and processes them at an approximately constant rate (analogous to water leaking out of a bucket at a constant rate).
 
 However,
 a burst of traffic can starve more recent requests from being processed
@@ -186,7 +186,7 @@ as each request requires summing up prior requests, which may not scale well in 
 
 \subsubsection{Sliding Window Counter}\label{subsubsec:sliding-window-counter-algorithm}
 
-The sliding window counter algorithm essentially combines the efficiency of the fixed window approach with the accuracy of the sliding log method.
+The sliding window counter algorithm essentially combines the fixed window counter and sliding window log algorithms to provide a more balanced approach to rate limiting.
 
 Key features of the sliding window counter algorithm include:
 
@@ -220,7 +220,7 @@ The most common approaches include:
 
 \subsection{Types Of Rate Limiting}\label{subsec:rate-limiter-types}
 
-Beside the algorithm-based classification, rate limiting can be implemented in various ways depending on the criteria used to limit the rate of requests.
+Besides the algorithm-based classification, rate limiting can be implemented in various ways depending on the criteria used to limit the rate of requests.
 A few common types of rate limiting include:
 \begin{itemize}
     \item \textbf{Total Requests}: Limits the total number of requests to a service within a given time period.
@@ -263,7 +263,7 @@ to set up sticky sessions in the load balancer so that each consumer gets sent t
 However, this approach has several disadvantages,
 including a lack of fault tolerance and scaling problems when nodes get overloaded~\cite{kong-rate-limiting}.
 
-A better option is to use a centralized data store (e.g., a database) to store the rate limit state,
+A better option is to use a shared data store (e.g., a database) to store the rate limit state,
 allowing all instances of the service to access and update the state in a consistent manner.
 This approach has the disadvantage
 of introducing additional latency due to network communication with the data store and race conditions when
@@ -271,7 +271,8 @@ multiple instances try to update the state simultaneously.
 
 A naive approach to distributed rate limiting is to use a `get-then-set' approach,
 where the rate limit state is read from the data store, incremented, and then written back.
-The issue with this model is that during the read-increment-store cycle, additional requests may arrive, leading each to attempt storing an incremented counter-value, potentially resulting in an invalid (lower) counter-value. This can enable consumers to send a high rate of requests, bypassing rate limiting controls~\cite{kong-rate-limiting}.
+The issue with this model is that during the read-increment-store cycle, additional requests may arrive, leading each to attempt storing an incremented counter-value, potentially resulting in an invalid (lower) counter-value.
+This can enable consumers to send a high rate of requests, bypassing rate limiting controls~\cite{kong-rate-limiting}.
 
 A few solutions arise to address these challenges:
 
@@ -283,43 +284,139 @@ A few solutions arise to address these challenges:
     Using more of the `set-then-get' approach can reduce the number of round trips to the data store;
 \end{itemize}
 
-To minimize latency introduced by using a centralized data store,
-rate limit checks can be performed locally in memory with an eventually consistent model as shown in Figure~\ref{fig:distributed-rate-limiting-centralized}.
-Each node periodically syncs with the centralized store,
+To minimize latency introduced by using a shared data store,
+rate limit checks can be performed locally in memory with an eventually consistent model as shown in Figure~\ref{fig:distributed-rate-limiting-shared}.
+Each node periodically syncs with the shared store,
 pushing counter-increments and retrieving updated values (to update the local cache).
 \textit{\enquote{The periodic rate at which nodes converge should be configurable. Shorter sync intervals will result in less divergence of data points when spreading traffic across multiple nodes in the cluster (e.g., when sitting behind a round robin balancer). Whereas longer sync intervals put less read/write pressure on the datastore and less overhead on each node to fetch new synced values}}~\cite{kong-rate-limiting}.
 
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=0.8\textwidth]{../figures/06_distributed_rate_limiting}
-    \caption{Distributed Rate Limiting with a Centralized Data Store.
+    \caption{Distributed Rate Limiting with a Shared Data Store.
     Retrieved from~\cite{kong-rate-limiting}}.
-    \label{fig:distributed-rate-limiting-centralized}
+    \label{fig:distributed-rate-limiting-shared}
 \end{figure}
 
 
 \section{Implementation Aspects}\label{sec:rate-limiter-implementation}
 
-TODO(what aspects went to the design and implementation aspects were considered)
+\subsection{Semaphore-Based Rate Limiter}\label{subsec:rate-limiter-semaphore-based}
 
-\subsection{Available Types}\label{subsec:rate-limiter-available-types}
+The semaphore-based rate limiter is a simple yet effective way to control the rate of requests to a service.
+This semaphore controls both the rate frequency and rate concurrency of requests by granting or denying access based on the availability of permits.
+
+The implementation uses a counting semaphore based on a specified algorithm
+(e.g., token bucket, fixed window counter) to apply rate limiting behaviour, namely,
+the replenishment of permits as described in the respective sections.
+
+\subsubsection{Synchronization Style}\label{subsubsec:rate-limiter-synchronization-style}
+
+The adopted synchronization style for the semaphore-based rate limiter was the Kernel or Delegation of execution in favor of the Monitor style.
+
+In the Monitor style of synchronization, the thread that creates or sees favorable conditions for other threads to advance to the next state, will signal those threads. It is the responsibility of those other threads to complete their own request of sorts after they exit the condition where they were waiting upon.
+
+In the Kernel or Delegation of execution synchronization style,
+the thread that creates or sees favorable conditions for other threads to advance to the next state is responsible
+for completing the requests of those other threads.
+In successful cases,
+the threads in the dormant state that were signaled do not have
+to do anything besides confirming that their request was completed and return immediately from the synchronizer.
+This style of synchronization is usually associated with one or more requests that a thread wants to see completed.
+These same threads will delegate the completion of the requests to another thread,
+while keeping a local reference to it.
+This in turn will enable the synchronizer to resume its functions without waiting for the requests to be completed.
+
+The mentioned local reference is what enables the thread to not lose track of the synchronizer state that it was waiting upon. Whereas, in the monitor-style synchronization, such state could be potentially lost since the thread, when awakened, has to recheck the state of the synchronizer which could have changed in the meantime.
+
+\subsubsection{Algorithm Template}\label{subsubsec:rate-limiter-algorithm-template}
+
+Initially, the semaphore-based rate limiter only supported the Fixed Window Counter algorithm indirectly.
+However, the API has been redesigned to be extensible, based on the Template Method pattern,
+allowing for the integration of the various rate limiting algorithms as described in the previous sections.
+This new design provides callers with the flexibility to choose the algorithm that best suits their use case.
+
+\subsubsection{Drain Operation}\label{subsubsec:rate-limiter-drain-operation}
+
+Besides the standard acquire and release operations, the semaphore-based rate limiter also supports a drain operation.
+This operation drains all available permits left in the current time window.
+It is performed based on a configurable response received from the underlying rate-limited service.
+This is useful for scenarios where the service needs to indicate that it is overwhelmed or needs a break,
+this way pausing / delaying incoming requests effectively, allowing the service to recover.
+
+\subsection{Available Types and Distribution}\label{subsec:rate-limiter-types-distribution}
+
+The semaphore-based rate limiter controls the rate of requests to a service
+using a counting semaphore to manage permits.
+This approach ensures that the rate and concurrency of requests are limited according to the availability of permits,
+which are managed based on the specified rate limiting algorithm (e.g., token bucket, fixed window counter),
+as described in the previous sections.
+
+In addition to the basic rate limiting mechanism, it was designed, through composition, a keyed rate limiter.
+The keyed rate limiter provides a fine-grained approach to rate limiting
+by allowing different rate limits to be set for different keys
+(e.g., user ID, IP address, API key).
+In this way, the rate of requests can be controlled separately for each key, as the state is maintained
+independently for each key.
+This approach is useful for scenarios
+where different clients or users have different rate limits based on their usage patterns or SLAs,
+and the abuse of one client does not affect the rate limit of another.
+
+Both the basic and keyed rate limiters are designed to support distributed environments.
+In these settings, the state (e.g., available permits, timestamps) can be stored in a shared data store,
+which must be implemented manually.
+By default, the rate limiter uses an in-memory data store to manage the state.
+However,
+the API is designed to allow replacement with a distributed data store
+(e.g., Redis, Cassandra) to ensure consistency across multiple instances of the rate-limited service.
 
 \subsection{Disposable Resource}\label{subsec:rate-limiter-disposable-resource}
 
+In certain implementations, the rate limiter may need to manage resources that require proper cleanup when they are no longer needed.
+For example, if the rate limiter maintains open connections to a database or a distributed data store
+for storing the state, it is crucial to release these resources gracefully to prevent resource leaks and ensure system stability.
+
+To address this, the rate limiter implements a disposable pattern,
+providing a mechanism to close or dispose of any open resources~\cite{microsoft-dispose-pattern}. This mechanism should be called when the rate limiter is no longer needed, such as during application shutdown or when the rate limiter is being replaced or reconfigured.
+
+\subsection{Retry After Policy}\label{subsec:rate-limiter-retry-after-policy}
+
+In some use cases, when a request is rate-limited, it is useful to inform the client about when they should retry the request~\cite{mdn-retry-after}.
+For instance, in the Fixed Window Counter algorithm,
+the optimal time for the client to retry is at the beginning of the next time window
+(i.e., the retry duration is algorithm-specific).
+
+With this information,
+an (outer) retry mechanism can be configured in the pipeline before the
+(inner) rate limiter to retry the request after the recommended duration.
+
+TODO (make drawings for the Fixed Window Counter and Sliding Window Counter algorithms)
+
 \subsection{Dynamic Configuration}\label{subsec:rate-limiter-dynamic-configuration}
 
-\subsection{Components}\label{subsec:rate-limiter-components}
+Modern rate limiters often need to adapt to changing conditions and requirements dynamically. Dynamic configuration allows modifying the rate limiter's behavior at runtime.
+
+A challenge arises when changing the rate limiter's configuration dynamically: such changes can only take effect in
+the next replenishment period.
+If applied immediately, the retry-after policy, for example, would be inconsistent with the new configuration,
+causing previously rate-limited requests to retry based on outdated information.
+
+To address this, the rate limiter provides mechanisms to update the configuration dynamically, including the replenishment period and the total number of permits.
+These changes ensure that new configurations are applied consistently and take effect in the next cycle, maintaining the integrity of the retry-after policy.
+
+Additionally,
+it's worth noting that in distributed environments that use an eventually consistent model for rate limiting,
+it can be challenging to ensure that configuration changes are propagated consistently across all nodes.
+
+\subsubsection{Event Emission}\label{subsubsec:rate-limiter-event-emission}
+
+The rate limiter emits events to notify listeners when a request to a rate-limited service:
 
 \begin{itemize}
-    \item \textbf{Semaphore}: To manage the acquisition and release of permits for requests in a synchronized way.
-    This is used to control access to the shared resources (e.g., the rate-limited service) and is conceptually similar to the token bucket algorithm, where a token represents a permit;
-    \item \textbf{Queue}: To hold requests when the rate limit is exceeded;
-    \item \textbf{Centralized Data Store}: The \texttt{Queue} and \texttt{Semaphore} components require a centralized state management (e.g., a database) to ensure consistency across multiple, possibly load-balanced, instances of the rate-limited service.
+    \item has succeeded to be processed;
+    \item has been rate-limited.
+    Two different event types can be emitted in this case based on if the request was rejected or queued;
 \end{itemize}
 
 
-TODO mention Kernel style/delegation of execution vs monitor style when explaining semaphore implementation
-
 \section{Configuration}\label{sec:rate-limiter-configuration}
-
-TODO(all mechanisms configuration should be after the implementation description, alter this)
