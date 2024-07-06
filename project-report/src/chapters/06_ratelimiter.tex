@@ -312,6 +312,9 @@ The implementation uses a counting semaphore based on a specified algorithm
 (e.g., token bucket, fixed window counter) to apply rate limiting behaviour, namely,
 the replenishment of permits as described in the respective sections.
 
+Note that how long a request holds $n$ permits is not the responsibility of the rate limiter itself.
+The caller or the rate-limited service should ensure proper timeout handling to avoid a request holding permits indefinitely.
+
 \subsubsection{Synchronization Style}\label{subsubsec:rate-limiter-synchronization-style}
 
 The adopted synchronization style for the semaphore-based rate limiter was the Kernel or Delegation of execution in favor of the Monitor style.
@@ -357,7 +360,7 @@ This approach ensures that the rate and concurrency of requests are limited acco
 which are managed based on the specified rate limiting algorithm (e.g., token bucket, fixed window counter),
 as described in the previous sections.
 
-In addition to the basic rate limiting mechanism, it was designed, through composition, a keyed rate limiter.
+In addition to the basic rate limiting mechanism, it was designed, through composition, a keyed rate limiter, as shown in Figure~\ref{fig:keyed-rate-limiter}.
 The keyed rate limiter provides a fine-grained approach to rate limiting
 by allowing different rate limits to be set for different keys
 (e.g., user ID, IP address, API key).
@@ -367,6 +370,13 @@ This approach is useful for scenarios
 where different clients or users have different rate limits based on their usage patterns or SLAs,
 and the abuse of one client does not affect the rate limit of another.
 
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/06_keyed-rate-limiter}
+    \caption{Keyed Rate Limiter}
+    \label{fig:keyed-rate-limiter}
+\end{figure}
+
 Both the basic and keyed rate limiters are designed to support distributed environments.
 In these settings, the state (e.g., available permits, timestamps) can be stored in a shared data store,
 which must be implemented manually.
@@ -374,8 +384,6 @@ By default, the rate limiter uses an in-memory data store to manage the state.
 However,
 the API is designed to allow replacement with a distributed data store
 (e.g., Redis, Cassandra) to ensure consistency across multiple instances of the rate-limited service.
-
-TODO(drawing for keyed rate limiter)
 
 \subsection{Disposable Resource}\label{subsec:rate-limiter-disposable-resource}
 

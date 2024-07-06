@@ -28,8 +28,19 @@ selected to cover both client-side and server-side applications,
 with an incremental difficulty level from simpler mechanisms like Retry to more complex solutions such as Circuit Breaker and distributed rate limiting.
 Each mechanism was detailed in terms of their functionality, design and implementation, configuration capabilities, default values associated with each policy, and their integration into the Ktor framework as plugins.
 
+In addition to the mechanisms,
+the project strived
+to maintain a high level of test coverage and on-site documentation with usage examples and considerations.
+In the later stages of the project,
+demos using the plugins were developed
+to showcase the mechanisms in action in real-world scenarios and from a multiplatform perspective,
+including running them in a browser using Kotlin/JS.
+
+Although the project did not delve deeply into Kotlin-specific details or even programming-related topics, unless
+absolutely necessary, it aimed to follow the best practices for idiomatic Kotlin and library design principles.
+
 In summary,
-this project successfully developed a dedicated Kotlin Multiplatform library
+this project successfully developed and deployed a dedicated Kotlin Multiplatform library
 that provides essential resilience mechanisms,
 and provides a Ktor integration to leverage these mechanisms in server and client architectures.
 
