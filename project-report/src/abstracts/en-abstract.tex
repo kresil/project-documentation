@@ -1,4 +1,35 @@
 \chapter*{Abstract}\label{ch:abstract}
-TODO
 
-\textbf{Keywords:} list of keywords separated by ;.
+% purpose:
+This project addresses a critical need in the Kotlin Multiplatform ecosystem,
+by developing a dedicated fault-tolerance library.
+Kotlin Multiplatform is a technology that enables developers to share code across diverse platforms promoting code reuse and maintainability.
+
+% goal:
+The primary goal is
+to create a Kotlin Multiplatform library
+offering essential resilience mechanisms (e.g., Retry, Circuit Breaker, Rate Limiter)
+that alone or combined, prevent or mitigate the inevitable failures that occur in distributed systems,
+which impact the availability and reliability of services.
+Furthermore, the project aims to integrate these mechanisms into Ktor,
+the only Kotlin Multiplatform framework for building asynchronous server and client services.
+
+% methodology:
+The project began with a review of existing solutions for resilience mechanisms in various platforms and languages
+to identify common patterns and practices, as well as differences and limitations.
+With this knowledge,
+a model was designed to represent the common interface for all implemented resilience mechanisms by the library -
+the Mechanism Model.
+The project then explored each of the
+various (but not all) resilience mechanisms,
+detailing their functionality,
+the chosen design and implementation details, configuration capabilities, default values associated with each policy, and their integration into the Ktor framework as plugins.
+
+% conclusion:
+As the project is amidst development, future work includes
+expanding the library with additional resilience mechanisms
+and further improving its testing and documentation.
+This way providing developers with a comprehensive and reliable toolkit for building resilient distributed systems
+in Kotlin Multiplatform.
+
+\textbf{Keywords:} Kotlin Multiplatform; library; fault-tolerance; resilience; distributed systems; Ktor framework
