@@ -110,7 +110,7 @@ Based on the described template's project structure, the following structure was
         \item \textbf{apps}: defines the modules that will consume the KMP library (e.g.,\textttt{js-app}, \texttt{android-app});
         \item \textbf{lib/shared}: defines the library's code to be shared by the consuming modules;
         \begin{itemize}
-            \item \textbf{src} defines the target submodules of the library including their test counterparts (i.e., \texttt{<Platform>Main}, \texttt{<Platform>Test}).
+            \item \textbf{src}: defines the target submodules of the library including their test counterparts (i.e., \texttt{<Platform>Main}, \texttt{<Platform>Test});
             \item \textbf{build.gradle.kts}: defines the library's dependencies, targets, and additional configurations.
         \end{itemize}
     \end{itemize}
@@ -119,14 +119,15 @@ Based on the described template's project structure, the following structure was
 
 \section{Platform-Dependent Code}\label{sec:platform-dependent-code}
 
-As code sharing across platforms is the primary objective of KMP, the code should be written as platform-independently as possible (i.e., aggregating as much code as possible in the hierarchically higher categories).
+As code sharing across platforms is the primary objective of KMP, it should be written as platform-independently as possible (i.e., aggregating as much code in the hierarchically higher categories).
 However, it is sometimes necessary to create specific code for a given platform, regularly referred to as \textit{target}, in the following situations:
 
 \begin{itemize}
     \item Access to API's specific to the \textit{target} is required (e.g., \textit{Java's File API});
-    \item The libraries available in the common category (i.e., \textit{Standard Kotlin Library}, libraries from \textit{Kotlinx}) do not cover the desired functionalities, and third-party libraries either do not support them or are avoided to reduce dependencies.
-    \item When specific types and functions defined in Kotlin need to be accessed in other languages (e.g., \textit{Javascript}), an \textit{adapter} is required.
-    This adapter allows communication with the common category code, in \textit{Kotlin}, from the native code of the \textit{target}, which can be defined in the \textit{Intermediate} or \textit{Specific} category.
+    \item The libraries available in the common category (i.e., \textit{Standard Kotlin Library}, libraries and extensions from \textit{Kotlinx}) do not cover the desired functionalities, and third-party libraries either do not support them or are avoided to reduce dependencies;
+    \item When specific types and functions defined in Kotlin need to be accessed in other languages (e.g., \textit{Javascript}).
+    As such, an adapter is required to communicate with the common category code,
+    in Kotlin, from the native code of the \textit{target}, which can be defined in the \textit{Intermediate} or \textit{Specific} categories.
 \end{itemize}
 
 To create specific code for a \textit{target}, the mechanism \textit{expect/actual}~\cite{kmp-expect-actual} is used.
@@ -147,7 +148,7 @@ The project supports the following targets:
 
 \section{Kotlin Library Practices}\label{sec:kotlin-library-practices}
 
-The library should follow the best practices for developing a Kotlin library, including:
+The library follows the best practices for developing a Kotlin library, including:
 
 \begin{itemize}
     \item Adherence to \href{https://kotlinlang.org/docs/coding-conventions.html#coding-conventions-for-libraries}{Kotlin Coding Conventions for Libraries} to ensure consistency and readability;
@@ -157,7 +158,7 @@ The library should follow the best practices for developing a Kotlin library, in
 
 \section{Multiplatform Considerations}\label{sec:multiplatform-considerations}
 
-When developing a multiplatform library, it is essential to consider the following aspects:
+When developing a multiplatform library, it was necessary to consider the following aspects, which may be harder to manage in a multiplatform context:
 
 \begin{itemize}
     \item \textbf{Concurrency}: Techniques and tools used to manage concurrency, ensuring thread safety and performance across platforms;

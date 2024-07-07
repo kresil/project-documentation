@@ -3,20 +3,19 @@
 % introduction:
 This project addresses a critical need in the Kotlin Multiplatform ecosystem,
 by developing a dedicated fault-tolerance library.
-Kotlin Multiplatform is a technology that enables developers to share code across diverse platforms promoting code reuse and maintainability.
+Kotlin Multiplatform is a technology that enables developers to share code across multiple platforms, promoting code reuse and maintainability.
 
 % goal:
 The primary goal is
 to create a Kotlin Multiplatform library
-offering essential resilience mechanisms (e.g., Retry, Circuit Breaker, Rate Limiter)
-that alone or combined, prevent or mitigate the inevitable failures that occur in distributed systems,
+offering essential resilience mechanisms (e.g., Retry, Circuit Breaker, Rate Limiter).
+These mechanisms, alone or combined, prevent or mitigate the inevitable failures that occur in distributed systems,
 which impact the availability and reliability of services.
 Furthermore, the project aims to integrate these mechanisms into Ktor,
 the only Kotlin Multiplatform framework for building asynchronous server and client services.
 
 % methodology:
-The project began with a review of existing solutions for resilience mechanisms in various platforms and languages
-to identify common patterns and practices, as well as differences and limitations.
+The project began with a review of existing solutions in various platforms and languages to identify common patterns and practices, as well as differences and limitations.
 With this knowledge,
 a model was designed to represent the common interface for all implemented resilience mechanisms by the library -
 the Mechanism Model.

@@ -3,15 +3,15 @@
 
 \section{Context}\label{sec:context}
 
-Our reliance on digital services has grown exponentially, driving the need for these services to be highly reliable and available always.
+Our reliance on digital services has grown exponentially,
+driving the need for these services to be highly reliable and always available.
 Whether it's financial transactions, healthcare systems, or social media platforms, users expect uninterrupted access and seamless experiences.
 This expectation places significant pressure on the underlying infrastructure to handle failures gracefully and maintain service continuity.
 Achieving this level of reliability requires sophisticated mechanisms to manage and mitigate faults effectively.
 
 Most of these services are built on distributed systems,
-which consist of independent networked computers that present themselves to users as a single,
-coherent system~\cite{fcc-distributed-systems}.
-Given the complexity of these systems, they are susceptible to failures caused by a variety of factors, such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors.
+which consist of independent networked computers that present themselves to users as a single coherent system~\cite{fcc-distributed-systems}.
+Given the complexity of these systems, they are susceptible to failures caused by a variety of factors such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors.
 As such, it is crucial to ensure that services within distributed systems are resilient, and more specifically, fault-tolerant.
 
 Fault-tolerance and fault-resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences:
@@ -21,7 +21,7 @@ Fault-tolerance and fault-resilience are key concepts in this context, and while
     A fault-tolerant service is a service that is able to maintain all or part of its functionality,
     or provide an alternative, when one or more of its associated components fail.
     The user does not observe see any fault except for some possible delay during which failover occurs;
-    \item {\textbf{Fault-Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.);
+    \item {\textbf{Fault-Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.).
 \end{itemize}
 
 These distinctions are important,
@@ -37,7 +37,9 @@ Some of the most common mechanisms are described in Table~\ref{tab:resilience-pa
 
 \begin{table}[!htb]
     \centering
-    \caption{Resilience mechanisms examples. \textit{Resilience4j}~\cite{resilience4j} documentation}\label{tab:resilience-patterns}
+    \caption{Resilience mechanisms examples.
+    Retrieved from ~\cite{resilience4j}}
+    \label{tab:resilience-patterns}
     \vspace{0.3cm}
     \begin{tabular}{|l|p{6cm}|p{6cm}|}
         \hline
@@ -55,8 +57,8 @@ Some of the most common mechanisms are described in Table~\ref{tab:resilience-pa
 These mechanisms can be further categorized based on when they are activated:
 
 \begin{itemize}
-    \item \textbf{Reactive Resilience}: Reacts to failures and mitigates their impact (e.g., the \textit{Retry} mechanism is only triggered after a failure occurs);
-    \item \textbf{Proactive Resilience}: Prevents failures from happening (e.g., the \textit{Rate Limiter} mechanism is used to limit the rate of incoming requests, as a way to prevent the system from being overwhelmed and potentially fail - acts before a failure occurs).
+    \item \textbf{Reactive Resilience}: Reacts to failures and mitigates their impact (e.g., the Retry mechanism is only triggered after a failure occurs);
+    \item \textbf{Proactive Resilience}: Prevents failures from happening (e.g., the Rate Limiter mechanism is used to limit the rate of incoming requests, as a way to prevent the system from being overwhelmed and potentially fail - acts before a failure occurs).
 \end{itemize}
 
 \subsection{Technologies}\label{subsec:technologies}
@@ -64,7 +66,7 @@ These mechanisms can be further categorized based on when they are activated:
 Kotlin Multiplatform~\cite{kotlin-multiplatform} is a technology that allows sharing code across multiple platforms,
 such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
 This type of technology is particularly useful for building services that run on multiple platforms,
-without having to write potentially equivalent platform-specific code and maintaining a reusable codebase.
+without having to write potentially equivalent platform-specific code, this way maintaining a reusable codebase.
 
 In 2019, Google announced Kotlin as the official language for Android development~\cite{google-android-kotlin},
 and more recently,
@@ -120,7 +122,7 @@ Table~\ref{tab:resilience_libraries} shows some examples of these libraries.
 \end{table}
 
 Hystrix served as an inspiration for Resilience4J, which is based on functional programming concepts.
-The primary distinction between the two is that, whereas Resilience4J relies on function composition to let you stack the specific decorators you need by utilizing Java 8's features (e.g., functional interfaces, lambda expressions)~\cite{resilience4j-vs-hystrix}, Hystrix embraces an object-oriented design where calls to external systems have to be wrapped in a \textit{HystrixCommand} offering multiple functionalities.
+The primary distinction between the two is that, whereas Resilience4J relies on function composition to let the caller stack the specific decorators it needs by utilizing Java 8's features (e.g., functional interfaces, lambda expressions)~\cite{resilience4j-vs-hystrix}, Hystrix embraces an object-oriented design where calls to external systems have to be wrapped in a \textit{HystrixCommand} offering multiple functionalities.
 
 Resilience4j served as the main source of inspiration for the project's development since it was considered a more modern way of implementing these mechanisms, follows a functional programming style, and is more in line with the characteristics of the Kotlin language.
 Polly was used as a secondary source to explore alternative approaches and design patterns that could be used in the project.
@@ -128,7 +130,7 @@ Polly was used as a secondary source to explore alternative approaches and desig
 \subsubsection{Arrow Library}
 
 The Arrow library,
-which presents itself as the functional companion to Kotlin's standard library, is a kotlin multiplatform library that
+which presents itself as the functional companion to Kotlin's standard library, is a Kotlin Multiplatform library that
 focuses on functional programming and includes, among other modules, a resilience module.
 This module implements three of the most critical design patterns around resilience~\cite{arrow-resilience}:
 retry and repeat computations using a \textit{Schedule},
@@ -146,13 +148,13 @@ This integration was considered because:
 
 \begin{itemize}
     \item Ktor is the only known Kotlin Multiplatform framework for server and client HTTP services development;
-    \item Immediately provide a way to use the library in a specific context;
+    \item Immediately provide a way to use the library in a specific context - HTTP;
     \item Validate the implementation and extensibility of the library.
 \end{itemize}
 
 The library should be easy to use and configure, taking advantage of Kotlin's language features to provide a concise and expressive API.
 
-The intended mechanisms to be implemented and the respective plugins for the Ktor framework are:
+According to the time available for the project, the scope was limited to the implementation of the following resilience mechanisms and their respective plugins for the Ktor framework:
 
 \begin{itemize}
     \item Retry and Plugin Mechanism for Ktor Client;
@@ -170,13 +172,14 @@ as well as documentation to guide developers on how to use them.
 This document is structured as follows:
 
 \begin{itemize}
-    \item \textbf{Chapter 2 - Kotlin Multiplatform}: Provides an overview of the Kotlin Multiplatform technology, its architecture, and how it can be used to share code across multiple platforms; Additionally, it describes the template used, the adopted project structure, and how to run tests in a multiplatform context;
+    \item \textbf{Chapter 2 - Kotlin Multiplatform}: Provides an overview of the Kotlin Multiplatform technology, its architecture, and how it can be used to share code across multiple platforms.
+    Additionally, it describes the template used, the adopted project structure, and how to run tests in a multiplatform context;
     \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: Describes the design and implementation aspects that are common to all the resilience mechanisms.
     Additionally, it describes the Ktor framework and how it was used in the project;
-    \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration, how it was implemented in both the library and as a plugin for the Ktor framework;
+    \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration and how it was implemented in both the library and as a plugin for the Ktor framework;
     \item \textbf{Chapter 5 - Circuit Breaker}: Same as the previous chapter, but for the Circuit Breaker mechanism;
     \item \textbf{Chapter 6 - Rate Limiter}: Same as the previous chapter, but for the Rate Limiter mechanism;
-    \item \textbf{Chapter 7 - Conclusion}: This chapter provides a summary of the project in a conclusion format and ends with future work considerations;
+    \item \textbf{Chapter 7 - Conclusion}: This chapter provides a summary of the project, work methodology, and future work.
 \end{itemize}
 
 Additionally, the document intentionally avoids detailed discussions of Kotlin-specific or even programming-specific details,
