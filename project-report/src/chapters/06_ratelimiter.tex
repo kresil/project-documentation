@@ -50,7 +50,7 @@ It serves as a single entry point for API calls, managing and routing them to th
 One of the key features~\cite{api-gateway} of an API Gateway's traffic management is the implementation of rate limiting and throttling policies.
 These policies control the rate of incoming requests and set rules and limits to regulate traffic, preventing the overloading of backend services.
 
-\subsection{Relation To The Throttling Mechanism}\label{subsec:rate-limiter-throttling}
+\subsection{Relation to the Throttling Mechanism}\label{subsec:rate-limiter-throttling}
 
 Rate limiting and throttling are closely related concepts often used interchangeably,
 since both mechanisms control the rate of incoming requests to protect services from being overwhelmed, but they have distinct differences.
@@ -220,7 +220,7 @@ The most common approaches include:
     If the request cannot be processed within the timeout period, it is rejected.
 \end{itemize}
 
-\subsection{Types Of Rate Limiting}\label{subsec:rate-limiter-types}
+\subsection{Types of Rate Limiting}\label{subsec:rate-limiter-types}
 
 Besides the algorithm-based classification, rate limiting can be implemented in various ways depending on the criteria used to limit the rate of requests.
 A few common types of rate limiting include:
@@ -372,29 +372,80 @@ and the abuse of one client does not affect the rate limit of another.
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.8\textwidth]{../figures/06_keyed-rate-limiter}
+    \includegraphics[width=0.5\textwidth]{../figures/06_keyed-rate-limiter}
     \caption{Keyed Rate Limiter}
     \label{fig:keyed-rate-limiter}
 \end{figure}
 
 Both the basic and keyed rate limiters are designed to support distributed environments.
-In these settings, the state (e.g., available permits, timestamps) can be stored in a shared data store,
+In these settings, the state can be stored in a shared data store,
 which must be implemented manually.
 By default, the rate limiter uses an in-memory data store to manage the state.
 However,
-the API is designed to allow replacement with a distributed data store
+the API is designed to allow replacement with a shared data store
 (e.g., Redis, Cassandra) to ensure consistency across multiple instances of the rate-limited service.
+
+\subsubsection{Rate Limiter State}\label{subsubsec:rate-limiter-state}
+
+The rate limiter state consists of the following attributes:
+
+\begin{itemize}
+    \item \textbf{Available Permits}: The number of permits available for granting access to requests.
+    This value is decremented when a request acquires permits and incremented when permits are released;
+    \item \textbf{Last Replinishment Period}: The timestamp of the last time the permits were replenished;
+    \item \textbf{Local Queue}: An optional queue of rate-limited requests that are waiting for permits to be released.
+\end{itemize}
+
+\subsection{Distributed Rate Limiting}\label{subsec:rate-limiter-distributed}
+
+In distributed systems,
+rate limiting can be challenging due to the need
+to maintain consistency across multiple instances (nodes) of the rate-limited service.
+
+It is offered a distributed rate limiting solution that uses a shared data store to store the rate limit state,
+which needs to be thread-safe, since multiple nodes can access and update the state concurrently.
+
+Upon further analysis, several challenges were identified when implementing distributed rate limiting:
+
+\begin{itemize}
+    \item \textbf{Release more than one permit}: More than one permit can be acquired per request, so considering the number of permits released might give several conditions for other requests to advance (not just one if using one permit only release);
+    \item \textbf{Enqueued request can give up at any time}: When an enqueued request gives up, the rate limiter must remove it from the distributed queue (as well as the local queue) to ensure consistency.
+    However, there's a chance that the distributed queue doesn't have the request since it's in transit and as such,
+    the request cannot give up as it was already completed;
+    \item \textbf{Node alert}:
+    How to identify and communicate between different rate-limited service instances;
+    \item \textbf{FIFO order garantee}: Between the two or more rate-limited service instances, there's no guarantee that the request that arrived at a given rate limiter is the first request that was enqueued in the distributed queue.
+\end{itemize}
+
+To address these challenges, an example of a distributed rate limiting architecture was designed to work as shown in Figure~\ref{fig:distributed-rate-limiting-architecture}, and described in the following steps:
+
+\begin{boldenumerate}
+    \item A caller requests 5 permits to be released on the rate limiter of a given node;
+    \item Since releasing permits might give conditions for other requests to advance, the rate limiter consults the distributed queue to see if there are any requests waiting;
+    \item The rate limiter sees that the oldest request in the distributed queue is waiting for 4 permits but was processed by another node.
+    As such, it removes the request from the distributed queue and completes the request.
+    \item The rate limiter publishes a message in a pub/sub system~\cite{microsoft-pub-sub-pattern} to alert the other node that the request can be removed from its local queue (knowing that each request in the distributed queue
+    stores the identifier of the node that processed it);
+    \item The other node, upon receiving the message, removes the first (corresponding) request from its local queue.
+    \item Since the rate limiter of the first node only partially completed the possible requests that could advance, it rechecks the distributed queue to see if there are any requests waiting.
+    The rate limiter sees that the oldest request in the distributed queue is waiting for 1 permit
+    but was processed by node where it resides.
+    \item The rate limiter removes the request from the distributed queue and completes the request.
+    As the request was processed by the same node, it doesn't need to alert itself,
+    and as such, the (corresponding) request is only removed from its local queue.
+\end{boldenumerate}
 
 \subsection{Disposable Resource}\label{subsec:rate-limiter-disposable-resource}
 
 In certain implementations, the rate limiter may need to manage resources that require proper cleanup when they are no longer needed.
-For example, if the rate limiter maintains open connections to a database or a distributed data store
+For example, if the rate limiter maintains open connections to a database or a shared data store
 for storing the state, it is crucial to release these resources gracefully to prevent resource leaks and ensure system stability.
 
 To address this, the rate limiter implements a disposable pattern,
-providing a mechanism to close or dispose of any open resources~\cite{microsoft-dispose-pattern}. This mechanism should be called when the rate limiter is no longer needed, such as during application shutdown or when the rate limiter is being replaced or reconfigured.
+providing a mechanism to close or dispose of any open resources~\cite{microsoft-dispose-pattern}.
+This mechanism should be called when the rate limiter is no longer needed, such as during application shutdown or when the rate limiter is being replaced or reconfigured.
 
-\subsection{Retry After Policy}\label{subsec:rate-limiter-retry-after-policy}
+\subsection{Retry after Policy}\label{subsec:rate-limiter-retry-after-policy}
 
 In some use cases, when a request is rate-limited, it is useful to inform the client about when they should retry the request~\cite{mdn-retry-after}.
 For instance, in the Fixed Window Counter algorithm,
@@ -423,6 +474,13 @@ replenishment period and the total number of permits.
 Additionally, it's worth noting that in distributed environments that use an eventually consistent model for rate limiting,
 it can be challenging to ensure that configuration changes are propagated consistently across all nodes.
 
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/06_distributed-rate-limiting-architecture}
+    \caption{Distributed Rate Limiting Architecture Example}
+    \label{fig:distributed-rate-limiting-architecture}
+\end{figure}
+
 \subsection{Event Emission}\label{subsec:rate-limiter-event-emission}
 
 The rate limiter emits events to notify listeners when a request to a rate-limited service:
@@ -445,9 +503,9 @@ The rate limiter emits events to notify listeners when a request to a rate-limit
     \vspace{0.3cm}
     \begin{tabular}{|p{5cm}|p{5cm}|p{6cm}|}
         \hline
-        \textbf{Config Property} & \textbf{Default Value/Behaviour}                                                   & \textbf{Description}                               \\ \hline
-        \texttt{algorithm}       & \texttt{FixedWindowCounter[ totalPermits=1000, replenishPeriod=1m, queueLength=0]} & The rate limiting algorithm and its configuration.                                                                                                         \\ \hline
-        \texttt{baseTimeoutDuration} & \texttt{1s} & The default duration a request will be placed in the queue
+        \textbf{Config Property} & \textbf{Default Value/Behaviour}                                                       & \textbf{Description}                               \\ \hline
+        \texttt{algorithm}       & \texttt{FixedWindowCounter[ totalPermits=1000, replenishmentPeriod=1m, queueLength=0]} & The rate limiting algorithm and its configuration.                                                                                                         \\ \hline
+        \texttt{baseTimeoutDuration} & \texttt{10s} & The default duration a request will be placed in the queue
         if rate-limited.
         After this duration, the request will be rejected. \\ \hline
         \texttt{onRejected} & \texttt{Rethrow throwable

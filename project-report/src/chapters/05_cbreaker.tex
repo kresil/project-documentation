@@ -22,7 +22,7 @@ For example, if an operation is set to time out and fail after a certain period,
 These blocked requests consume critical resources like memory, threads, and database connections, potentially leading to system-wide failures~\cite{microsoft-cbreaker-pattern}.
 In such cases, it’s more efficient for the application to quickly acknowledge the failure and handle it appropriately, rather than repeatedly retrying the operation.
 
-\subsection{Relation To The Retry Mechanism}\label{subsec:cbreaker-relation-to-retry}
+\subsection{Relation to the Retry Mechanism}\label{subsec:cbreaker-relation-to-retry}
 
 The circuit breaker mechanism is related to the retry mechanism~\ref{ch:retry}, as both are used to handle faults that might occur when connecting to a remote service or resource.
 However, the two mechanisms are used in different situations.
