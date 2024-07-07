@@ -5,12 +5,12 @@
 
 \section{Introduction}\label{sec:retry-context}
 
-The retry mechanism is a \textit{\enquote{resilience pattern
+The Retry mechanism is a \textit{\enquote{resilience pattern
 that allows an application to handle transient failures when it tries to connect to a service or network resource.
 By transparently retrying a failed operation,
     the application can improve its stability and availability}}~\cite{microsoft-retry-pattern}.
 
-The retry mechanism, as illustrated in Figure~\ref{fig:retry-execution-example},
+The Retry mechanism, as illustrated in Figure~\ref{fig:retry-execution-example},
 is particularly useful when the application is interacting with services that are prone to temporary
 (transient) failures, such as network issues,
 temporary unavailability of services, or timeouts when services are overloaded.
@@ -20,7 +20,7 @@ meaning that retrying the operation after a short delay can often succeed
 a call to a service that is temporarily overloaded might succeed
 if retried after a few seconds)~\cite{microsoft-retry-pattern}.
 
-Without a retry mechanism, an application might treat such transient failures as critical,
+Without a Retry mechanism, an application might treat such transient failures as critical,
 leading to unnecessary disruptions in service, increased latency, and a poor user experience.
 
 When an application detects a failure, it can handle it using the following strategies~\cite{microsoft-retry-pattern}:
@@ -86,7 +86,7 @@ while a delay provider executes the actual waiting period by pausing or blocking
 For example, for testing purposes, the custom delay provider might be implemented to not delay using real time,
 but instead, immediately continue the execution,
 and only keeping track of the time that would have been spent waiting (virtual time).
-This can be useful for speeding up tests that involve retry mechanisms,
+This can be useful for speeding up tests that involve Retry mechanisms,
 as it allows for faster execution without actually waiting for the delay duration.
 
 A custom delay provider also allows maintaining external state
@@ -110,7 +110,7 @@ During the initial development phases, if an operation failed after multiple ret
 the last caught exception was always rethrown,
 and the original result was returned without any modifications.
 This approach is sufficient for most use cases,
-and the studied implementations of the retry mechanism follow this pattern, but
+and the studied implementations of the Retry mechanism follow this pattern, but
 it was decided to provide a more flexible solution
 (e.g., the caller doesn't want a specific exception to be thrown, but instead wants to log it only).
 To address this, an exception handler was introduced to the configuration.
@@ -119,7 +119,7 @@ This handler allowed for additional processing of the caught exception
 but still did not provide a way to modify the result of the underlying operation.
 
 To provide even more flexibility, a result mapper was introduced.
-This mapper enables customized handling of the result or exception once the retry mechanism could not be used any more,
+This mapper enables customized handling of the result or exception once the Retry mechanism could not be used any more,
 allowing for more complex scenarios to be managed while keeping the already established functionality intact.
 Additionally, the result mapper can be reconfigured per decoration or, if ommited,
 the configured exception handler is used to handle exceptions while the result is returned as is.
@@ -130,7 +130,7 @@ The retry context represents the asynchronous context mechanism's model componen
 (see Section~\ref{subsec:asynchronous-context}),
 which is responsible for managing the state and controlling the flow of retryable operations.
 It maintains internal state information, such as the number of retry attempts and the last-caught exception,
-and has access to the configuration settings defined for the retry mechanism.
+and has access to the configuration settings defined for the Retry mechanism.
 Additionally, it emits events to potential listeners.
 
 In the later stages of development,
@@ -142,18 +142,15 @@ allowing it to access the context and potentially alter its behaviour based on a
 The retry context emits the following events when the operation:
 
 \begin{itemize}
-    \item Has succeeded and the retry mechanism is no longer needed;
+    \item Has succeeded and the Retry mechanism is no longer needed;
     \item Is about to be retried;
-    \item Has failed, and the retry mechanism cannot be used any more.
+    \item Has failed, and the Retry mechanism cannot be used any more.
     Two different event types can be emitted in this case based on if the last-caught exception was expected or not.
 \end{itemize}
 
 \subsection{Execution Flow}\label{subsec:retry-execution-flow}
 
-A retry mechanism can be used to decorate an operation.
-When the operation is executed, a new retry context is created (per-method invocation).
-
-A retry mechanism can be used to decorate an operation.
+A Retry mechanism can be used to decorate an operation.
 Each time the operation is executed, a new retry context is created (per-method invocation).
 The outcome of the operation—success or failure—is determined by the policies defined in the retry configuration.
 
@@ -164,12 +161,12 @@ If so, the operation is repeated after a delay, calculated based on the specifie
 But if the retry context determines that the operation should not be retried,
 the operation is considered to have failed.
 
-If the operation eventually succeeds through the retry mechanism, the retry is considered successful.
-In all cases where the retry mechanism cannot be used any more
+If the operation eventually succeeds through the Retry mechanism, the retry is considered successful.
+In all cases where the it cannot be used any more
 (e.g., the maximum number of attempts has been reached),
 the result mapper is called to map the final result or exception before it is returned to the caller.
 
-This description can be seen in the retry mechanism execution flow,
+This description can be seen in the Retry mechanism execution flow diagram,
 as illustrated in Figure~\ref{fig:retry-execution-flow}.
 
 \begin{figure}[!htb]
@@ -213,9 +210,8 @@ as illustrated in Figure~\ref{fig:retry-execution-flow}.
 
 \section{Ktor Integration}\label{sec:retry-ktor-integration}
 
-The retry mechanism was integrated with Ktor
-by implementing a custom plugin that can be added to the application's Ktor pipeline,
-using the implemented retry mechanism.
+The Retry mechanism was integrated with Ktor
+by implementing a custom plugin that can be added to the application's Ktor pipeline.
 
 \subsection{Plugin Implementation}\label{subsec:request-retry-plugin}
 
@@ -232,7 +228,7 @@ The plugin allows for two levels of configuration:
 
 \begin{itemize}
     \item \textbf{Global Configuration}: The configuration is set during the plugin installation and applies to all requests made by the client;
-    \item \textbf{Per-Request Customization}: The configuration can be overridden for a specific request, allowing for more fine-grained control over the retry logic (e.g., disabling the retry mechanism for a specific request).
+    \item \textbf{Per-Request Customization}: The configuration can be overridden for a specific request, allowing for more fine-grained control over the retry logic (e.g., disabling the Retry mechanism for a specific request).
 \end{itemize}
 
 A listener to log all events emitted by the retry context is also enabled,
@@ -240,7 +236,7 @@ which cancels its subscription when the request is completed.
 
 \subsection{Configuration}\label{subsec:retry-ktor-configuration}
 
-The retry Ktor plugin can be configured by using a dedicated configuration builder with the properties listed in
+The Retry Ktor plugin can be configured by using a dedicated configuration builder with the properties listed in
 Table~\ref{tab:retry-ktor-config-builder}.
 
 \begin{table}[!htb]
