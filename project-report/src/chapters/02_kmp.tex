@@ -37,7 +37,7 @@ and deploying a multiplatform library for most platforms.
 Gradle is a build automation tool for multi-language software development.
 Offers support for all phases of a build process including compilation, verification, dependency resolving, test execution, source code generation, packaging and publishing~\cite{gradle}.
 
-In a Gradle build using Kotlin DSL (i.e., domain-specific language), a project's configuration is primarily defined in two key files:
+In a Gradle build using Kotlin DSL (domain-specific language), a project's configuration is primarily defined in two key files:
 
 \begin{itemize}
     \item \textbf{build.gradle.kts} - Defines a project's build configuration.
@@ -62,7 +62,7 @@ A Gradle project can be organized into multiple subprojects, each with its own b
 
 \subsection{GitHub Actions}\label{subsec:github-actions}
 
-Template provides workflows for GitHub Actions~\cite{github-actions}, which are used to automate tasks such as building, testing, and deploying a project.
+The template provides workflows for GitHub Actions~\cite{github-actions}, which are used to automate tasks such as building, testing, and deploying a project.
 The configurations for GitHub Actions are located in the \textit{.github/workflows} folder, and include the following workflows:
 
 \begin{itemize}
@@ -140,23 +140,28 @@ The project supports the following targets:
 \begin{itemize}
     \item \textbf{JVM}: Allows running the code on the \textit{Java Virtual Machine};
     \item \textbf{JavaScript}: Allows running the code in a browser or \textit{Node.js} environment;
-    \item \textbf{Android}: Allows running the code on Android devices.
+    \item \textbf{Android}: Allows running the code on Android devices;
     \item \textbf{Native}: Allows running the code on platforms that support \textit{Kotlin/Native}, excluding macOS and iOS, because the lack of access to the necessary hardware for testing.
 \end{itemize}
 
 
-\section{Running Tests}\label{sec:running-tests}
-TODO: If gradle tasks are already described, maybe not necessary.
+\section{Kotlin Library Practices}\label{sec:kotlin-library-practices}
+
+The library should follow the best practices for developing a Kotlin library, including:
+
+\begin{itemize}
+    \item Adherence to \href{https://kotlinlang.org/docs/coding-conventions.html#coding-conventions-for-libraries}{Kotlin Coding Conventions for Libraries} to ensure consistency and readability;
+    \item Compliance with \href{https://kotlinlang.org/docs/api-guidelines-introduction.html}{Kotlin API Guidelines} to create a user-friendly and maintainable API.
+\end{itemize}
 
 
-\section{Experiments Performed}\label{sec:experiments-performed}
-TODO:
+\section{Multiplatform Considerations}\label{sec:multiplatform-considerations}
 
-\section{Library Practices}\label{sec:library-practices}
-TODO:
-- https://kotlinlang.org/docs/coding-conventions.html#coding-conventions-for-libraries
-- https://kotlinlang.org/docs/api-guidelines-introduction.html#what-s-next
+When developing a multiplatform library, it is essential to consider the following aspects:
 
-
-\section{Other Aspects}\label{sec:other-aspects}
-TODO: What was done to have concurrency, logging, CI integration, mocking in tests, etc
+\begin{itemize}
+    \item \textbf{Concurrency}: Techniques and tools used to manage concurrency, ensuring thread safety and performance across platforms;
+    \item \textbf{Time Representation and Measurement}: Strategies for representing and measuring time consistently across platforms;
+    \item \textbf{Logging}: Implementation of logging to facilitate debugging and monitoring;
+    \item \textbf{Mocking}: Strategies for mocking dependencies in tests to isolate and verify the behavior of individual components.
+\end{itemize}

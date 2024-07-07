@@ -392,7 +392,7 @@ The rate limiter state consists of the following attributes:
 \begin{itemize}
     \item \textbf{Available Permits}: The number of permits available for granting access to requests.
     This value is decremented when a request acquires permits and incremented when permits are released;
-    \item \textbf{Last Replinishment Period}: The timestamp of the last time the permits were replenished;
+    \item \textbf{Last Replenishment Period}: The timestamp of the last time the permits were replenished;
     \item \textbf{Local Queue}: An optional queue of rate-limited requests that are waiting for permits to be released.
 \end{itemize}
 
@@ -426,13 +426,12 @@ To address these challenges, an example of a distributed rate limiting architect
     As such, it removes the request from the distributed queue and completes the request.
     \item The rate limiter publishes a message in a pub/sub system~\cite{microsoft-pub-sub-pattern} to alert the other node that the request can be removed from its local queue (knowing that each request in the distributed queue
     stores the identifier of the node that processed it);
-    \item The other node, upon receiving the message, removes the first (corresponding) request from its local queue.
+    \item The other node, which had previously subscribed to the pub/sub system, receives the message and removes the (corresponding) request from its local queue.
     \item Since the rate limiter of the first node only partially completed the possible requests that could advance, it rechecks the distributed queue to see if there are any requests waiting.
     The rate limiter sees that the oldest request in the distributed queue is waiting for 1 permit
     but was processed by node where it resides.
     \item The rate limiter removes the request from the distributed queue and completes the request.
-    As the request was processed by the same node, it doesn't need to alert itself,
-    and as such, the (corresponding) request is only removed from its local queue.
+    \item Since the request was processed by the same node, it doesn't need to alert itself, and as such, the (corresponding) request is only removed from its local queue.
 \end{boldenumerate}
 
 \subsection{Disposable Resource}\label{subsec:rate-limiter-disposable-resource}
@@ -445,7 +444,7 @@ To address this, the rate limiter implements a disposable pattern,
 providing a mechanism to close or dispose of any open resources~\cite{microsoft-dispose-pattern}.
 This mechanism should be called when the rate limiter is no longer needed, such as during application shutdown or when the rate limiter is being replaced or reconfigured.
 
-\subsection{Retry after Policy}\label{subsec:rate-limiter-retry-after-policy}
+\subsection{Retry after Rate Limited}\label{subsec:rate-limiter-retry-after}
 
 In some use cases, when a request is rate-limited, it is useful to inform the client about when they should retry the request~\cite{mdn-retry-after}.
 For instance, in the Fixed Window Counter algorithm,
@@ -456,7 +455,19 @@ With this information,
 an (outer) retry mechanism can be configured in the pipeline before the
 (inner) rate limiter to retry the request after the recommended duration.
 
-TODO (make drawings for the Fixed Window Counter and Sliding Window Counter algorithms retry after duration)
+Additionally, to calculate the retry-after duration, the rate limiter should not assume a queue is configured.
+As such,
+the calculated duration solely depends on the rate limiting algorithm replenishment period and the total number of permits.
+The duration represents the minimum time the client should wait before retrying the request, but does not guarantee that the request will be processed.
+
+A few examples of the retry-after duration calculation in some the aforementioned algorithms are shown in Figure~\ref{fig:rate-limiter-retry-after}.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/06_retry-after-rate-limited}
+    \caption{Retry After Rate-Limited Examples}
+    \label{fig:rate-limiter-retry-after}
+\end{figure}
 
 \subsection{Dynamic Configuration}\label{subsec:rate-limiter-dynamic-configuration}
 
