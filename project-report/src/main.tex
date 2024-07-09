@@ -1,6 +1,4 @@
 \documentclass[a4paper,openright,twoside,11pt]{report}
-\usepackage{csquotes}
-\usepackage{moresize}
 
 \input{preamble}
 
@@ -32,8 +30,8 @@
     \cleardoublepage
 
     % generation of list of figures and tables
-    %\listoffigures \cleardoublepage
-    %\listoftables \cleardoublepage
+    \listoffigures \cleardoublepage
+    \listoftables \cleardoublepage
 
     % reset page numbering
     \setcounter{page}{1}
@@ -45,7 +43,8 @@
     \input{chapters/03_common_design}
     \input{chapters/04_retry}
     \input{chapters/05_cbreaker}
-    \input{chapters/06_conclusion}
+    \input{chapters/06_ratelimiter}
+    \input{chapters/07_conclusion}
 
     % references
     \clearpage

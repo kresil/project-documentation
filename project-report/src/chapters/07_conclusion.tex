@@ -1,0 +1,102 @@
+\chapter{Conclusion}\label{ch:conclusion}
+
+The development of this project was focused
+on addressing an important need
+for building reliable and robust distributed systems in the Kotlin Multiplatform ecosystem, which is the lack of a dedicated library for fault-tolerance.
+
+The aim was to develop a Kotlin Multiplatform library
+that provides essential resilience mechanisms, which alone or combined, prevent or mitigate the inevitable failures that occur in distributed systems.
+The Ktor integration was a later addition to the project, as of the time of writing,
+is the only Kotlin Multiplatform framework for developing asynchronous server and client services.
+This addition was a strategic decision to validate the library's implementation and provide immediate usage in a specific and widely-used context - HTTP.
+
+The project began with a review and analysis
+of the existing solutions on resilience mechanism implementations,
+in several platforms and languages,
+in order to identify the common patterns and practices, as well as the differences and limitations.
+This research was essential to understand the current state of the art of resilience mechanisms,
+and to help identify gaps that the library could address, improve upon, or equally provide.
+With that knowledge,
+a model was designed to represent the common interface for all implemented resilience mechanisms by the library -
+the Mechanism Model.
+Additionally, the project explored the Ktor framework to understand its architecture and extensibility points.
+
+Various resilience mechanisms were strategically explored in the project,
+selected to cover both client-side and server-side applications,
+with an incremental difficulty level from simpler mechanisms like Retry to more complex solutions such as Circuit Breaker and distributed rate limiting.
+Each mechanism was detailed in terms of their functionality, design and implementation, configuration capabilities, default values associated with each policy, and their integration into the Ktor framework as plugins.
+
+In addition to the mechanisms,
+the project strived
+to maintain a high level of test coverage and on-site documentation with usage examples and considerations.
+In the later stages of the project,
+demos using the plugins were developed
+to showcase the mechanisms in action in real-world scenarios and from a multiplatform perspective,
+including running them in a browser using Kotlin/JS.
+
+In summary, this project successfully developed and deployed a dedicated Kotlin Multiplatform library that offers essential resilience mechanisms, and includes a Ktor integration to leverage these mechanisms in server and client architectures.
+Although the project did not delve deeply into Kotlin-specific details or even programming-related topics, unless
+absolutely necessary, it aimed to follow the best practices for idiomatic Kotlin and library design principles.
+
+
+\section{Future Work}\label{sec:future-work}
+
+The library provides a starting point for building reliable and robust distributed systems in the Kotlin Multiplatform ecosystem, but there is still room for improvement and expansion.
+
+The following are some possible future work that can be done to enhance the library in no particular order:
+
+\begin{itemize}
+    \item \textbf{Additional Resilience Mechanisms}:
+    Implement additional resilience mechanisms to cover more complex scenarios and requirements, such as Bulkhead,
+    Cache, Timeout, and Fallback.
+    This will complete the set of considered essential mechanisms for building resilient systems.
+    Additionally, implement the respective Ktor plugins for these mechanisms;
+    \item \textbf{Registry}:
+    Implement a registry system
+    to access and manage the resilience mechanisms and their configurations at runtime and in a centralized manner;
+    \item \textbf{Metrics}:
+    Implement a metrics system to collect information of the resilience mechanisms execution (e.g., the number of retries, the number of failures, etc.) for monitoring and analysis purposes. This could provide, among other benefits, insights on how to adjust the configuration of the mechanisms to improve the system’s resilience and responsiveness;
+    \item \textbf{Testing Improvements}:
+    Enhance the testing suites with more comprehensive, complex and concurrent test cases
+    to ensure the reliability and robustness of the library, as well as to cover more edge cases and scenarios.
+    Use a dedicated Kotlin Multiplatform testing framework such as Kotest~\cite{kotest}
+    to improve the maintainability and readability of the future developed tests.
+    Tests that involve benchmarking and performance evaluation can also be added to measure the overhead of the mechanisms,
+    and provide insights on how to optimize them.
+    Extend these tests to cover the Ktor plugins as well;
+    \item \textbf{Dedicated Pipeline}:
+    Implement a pipeline,
+    where multiple mechanisms can be attached in a specific order to handle different scenarios (e.g., combine an outer retry with an inner rate limiter, to retry after a request is rejected due to rate limiting);
+    \item \textbf{Adapter for JavaScript}: Implement an adapter to call the library from JavaScript code.
+    As the current implementation of the library is only usable in Kotlin code, an adapter is needed to make it accessible from JavaScript;
+    \item \textbf{Chaos Engineering}:
+    Besides unit, integration and possibly functional tests,
+    implement a Chaos Engineering module to test the resilience of the systems using the library in a controlled environment.
+    \item \textbf{Documentation and Examples}:
+    Improve the documentation
+    and provide more examples to help developers understand and use the library effectively.
+    A website or a dedicated page should be created
+    to host these resources.
+    A documentation engine such as Dokka~\cite{dokka} could be used to generate an additional documentation API website.
+    \item \textbf{CI/CD}:
+    Optimize the CI/CD pipeline by integrating tools like Dependabot~\cite{github-dependabot} to receive notifications and updates on the dependencies used in the project and other tools to enhance the development workflow;
+    \item \textbf{Selective Dependency Import}:
+    Offer the option to import one or more mechanisms as dependencies, rather than requiring all of them.
+    This will allow developers to include only the necessary parts of the library, enhancing modularity and reducing the application's footprint.
+    The same approach should be applied to the respective Ktor plugins.
+\end{itemize}
+
+
+\section{Work Methodology}\label{sec:work-methodology}
+
+Continuous efforts were made throughout the project to adhere to the best practices for software development and project management.
+Utilizing GitHub Projects proved invaluable as it provided a comprehensive view of planned tasks,
+tasks in progress, tasks in review, and tasks completed, enabling asynchronous collaboration and real-time updates.
+Each issue created was accompanied by detailed considerations,
+ensuring thoughtful evaluation and organization of development tasks into pull requests and different branches.
+The default branch remained untouched until deemed merge-ready and/or review-ready.
+
+Additionally, proficiency was gained in GitHub Actions to develop workflows that streamlined CI/CD processes.
+For this report, a dedicated workflow was established to maintain the most up-to-date version on the remote repository,
+ensuring continuous integration and accessibility.
+Learning and applying Git commit semantics ensured readability and clarity of intentions throughout the version control process.

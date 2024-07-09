@@ -1,15 +1,18 @@
 \chapter{Common Design and Implementation Strategy}\label{ch:design-implementation}
 
-This chapter outlines the shared design principles of the implemented mechanisms and the development approach used to integrate them with Ktor.
+This chapter outlines the shared design principles of the implemented mechanisms and the development approach
+used to integrate them with the Ktor framework.
+Additionally, it describes some of problems faced during the development process and the solutions adopted to address them.
+
 A comprehensive review and analysis of existing mechanism implementations~\ref{sec:related-work} were conducted
 to identify common design elements and relevant features that could be incorporated into the design of the mechanisms implemented in this project.
 
 
 \section{Mechanism Model}\label{sec:mechanism-model}
 
-The common design elements identified in the existing mechanisms implementations were used
+The common design elements identified in the existing solutions were used
 to define a model, as shown in Figure~\ref{fig:mechanism-model}.
-This model, named the Mechanism Model, is composed of multiple components, with distinct responsibilities and relations between them, that work together to provide a base foundation for implementing mechanisms:
+This model, named the Mechanism Model, is composed of multiple components, with distinct responsibilities and relations between them, that work together to provide a base foundation for the implementation of the mechanisms.
 
 \begin{itemize}
     \item \textbf{Configuration}: Represents a set of policies that, in conjuction, define the mechanism's intended behaviour (e.g., maximum number of retries, maximum wait duration, etc.);
@@ -28,8 +31,7 @@ This model, named the Mechanism Model, is composed of multiple components, with 
     \item \textbf{Decorator}: The decorator is an extension of the Implementation component.
     It is inspired on Resilience4J~\cite{resilience4j} decorators, and provides a convenient way to wrap code blocks with the mechanism's behaviour;
     \item \textbf{Ktor Plugin}: Responsible for the integration of the mechanism implementation with the Ktor pipeline.
-    The Configuration component is also used to create a specific plugin configuration,
-    which can be used to extend the mechanism's behaviour and provide additional features in an HTTP context.
+    The Configuration component is also used to create a specific plugin configuration, which extends the mechanism's behavior and adds additional features in an HTTP context.
 \end{itemize}
 
 \begin{figure}[!htb]
@@ -41,7 +43,7 @@ This model, named the Mechanism Model, is composed of multiple components, with 
 
 \subsection{Configuration Design}\label{subsec:configuration-design}
 
-Since the start of the project, the Configuration component has been designed to use the builder creational pattern~\cite{effective-java, design-patterns}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
+From the beginning of the project, the Configuration component has been designed to use the builder creational pattern~\cite{effective-java, design-patterns}, this way, separating the configuration definition (mutable) from the configuration usage (immutable).
 However, this initial implementation had a limitation: it was not possible to override a configuration object (i.e., create a new configuration object based on an existing one, and only modify specific properties while keeping the rest of the properties unchanged).
 
 To address this limitation, the Configuration component, particularly its builder,
@@ -58,6 +60,8 @@ The configuration process is as follows:
     \item If further modifications are needed, pass the new configuration back to the builder, which will use it as the base configuration;
     \item Repeat the process until the desired configuration is achieved.
 \end{boldenumerate}
+
+Additionally, the builder also has the additional responsibility of validating the configuration properties before applying them to the base configuration object.
 
 \subsection{Mechanism Execution Context}\label{subsec:mechanism-execution-context}
 
@@ -89,6 +93,8 @@ In computer science, a thread~\cite{java-thread} of execution is the smallest se
 In addition to being managed independently by an operating system's scheduler, threads are fundamental units of execution within a process.
 They enable concurrent execution of tasks, allowing a program to perform multiple operations simultaneously.
 
+At a given time, only one thread can be active on a CPU core.
+
 \subsubsection{Kotlin Coroutines}\label{subsubsec:kotlin-coroutines}
 
 A coroutine is an instance of a potentially suspendable computation,
@@ -99,16 +105,21 @@ to run that works concurrently with the rest of the code~\cite{kotlin-coroutines
 However, a coroutine is not bound to any particular thread,
 as it may suspend its execution in one thread and resume in another one.
 
-A suspended coroutine does not block the underlying thread, freeing it to run other coroutines or perform other tasks.
-In a thread, only one coroutine can run at a given time.
+A suspended coroutine does not block the underlying thread, allowing it to execute other coroutines or tasks.
+In a thread, only one coroutine runs at a time.
+
+A coroutine does not monopolize a thread during its execution.
+Instead, a single thread can run multiple coroutines by using time multiplexing,
+similar to how a single CPU can run multiple threads.
 
 Another important feature of coroutines is that they enforce structured concurrency~\cite{kotlin-coroutines}.
 Structured concurrency is a programming paradigm that enforces a hierarchical structure on concurrent code, ensuring that all concurrent tasks are properly managed and cleaned up, and any errors are propagated correctly and not lost.
 
 \subsection{Event Publishing}\label{subsec:event-publishing}
 
-Since the execution context is asynchronous, the events must be also published asynchronously.
-To achieve this, the Kotlin Coroutines' asynchronous primitive Flow~\cite{kotlin-flow} was used to emit such events.
+As the execution context is asynchronous, the events must be also published asynchronously.
+To achieve this, the Kotlin Coroutines'
+asynchronous primitive Flow~\cite{kotlin-flow} was used to emit such events to potential listeners.
 
 \subsubsection{Flow}\label{subsubsec:flow}
 
@@ -139,6 +150,7 @@ Each mechanism implementation has two ways to register listeners for events:
 The implementation also provides a way to cancel all registered listeners by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
 However, the cancellation of the registered listeners up to a given time does not affect later registrations.
 
+
 \section{Decoration}\label{sec:decoration}
 
 In mathematics,
@@ -167,16 +179,12 @@ But this design was too restrictive, as it did not allow for operations that rec
 To address this limitation, the operation types were redefined to support different scenarios:
 
 \begin{itemize}
-    \item \textbf{Supplier}: Accepts no arguments and produces a result.
-    Based on Java's Supplier functional interface~\cite{java-supplier};
-    \item \textbf{Function}: Accepts one argument and produces a result.
-    Based on Java's Function functional interface~\cite{java-function};
-    \item \textbf{BiFunction}: Accepts two arguments and produces a result.
-    Based on Java's BiFunction functional interface~\cite{java-bifunction}.
+    \item \textbf{Supplier}: Accepts no arguments and produces a result, which is based on Java's Supplier functional interface~\cite{java-supplier};
+    \item \textbf{Function}: Accepts one argument and produces a result, which is based on Java's Function functional interface~\cite{java-function};
+    \item \textbf{BiFunction}: Accepts two arguments and produces a result, which is based on Java's BiFunction functional interface~\cite{java-bifunction}.
 \end{itemize}
 
-Since the operations were going to be used in potential asynchronous contexts,
-the operation types were redefined to be suspendable (i.e., representing potentially suspendable operations).
+As the operations were intended for potential asynchronous contexts, the operation types were redefined to be suspendable, representing potentially suspendable operations.
 
 \subsection{Operation Context}\label{subsec:operation-context}
 
@@ -188,16 +196,44 @@ As a result, and to maintain backwards compatibility with the existing operation
 These new operation types receive the mechanism's execution context as an additional argument.
 
 
+\section{Exception Handling}\label{sec:exception-handling}
+
+In order to not enforce a specific exception handling strategy on the caller (e.g., always rethrowing exceptions),
+the mechanisms were designed to allow the caller to specify how caught exceptions should be handled.
+
+For each mechanism,
+the caller can provide an exception handler that is invoked when an exception occurs during the mechanism's execution.
+By default, the exception handler rethrows the exception,
+but the caller can provide a custom exception handler to handle the exception in a different way
+(e.g., logging the exception, mapping it to a different exception type, etc.).
+
+
+\section{Time Measurement}\label{sec:time-measurement}
+
+Time is a critical aspect of most mechanisms,
+as they often rely on time-based policies (e.g., wait duration, time interval, etc.) to determine their behavior.
+
+To ensure the accuracy and reliability of these time-based policies,
+the mechanisms use a comparable time mark with a monotonic time source to represent a snapshot of a point in time.
+A monotonic time source continuously increases and is not affected by system clock changes (e.g., time adjustments, time zone changes, etc.) which can occur with real-time clocks.
+
+With a given time mark,
+the mechanisms can accurately measure time by retrieving the elapsed duration between two time marks,
+and apply time-based policies accordingly.
+This strategy avoids the need to launch a thread or coroutine just to
+measure elapsed time, which could introduce unnecessary overhead and complexity.
+
+
 \section{Ktor Integration}\label{sec:ktor-integration}
 
 Integration with Ktor presented an opportunity to apply the mechanisms in a real-world scenario
 and validate their design and implementation.
-But before integrating the mechanisms with Ktor, it is necessary to understand Ktor's architecture and how to extend its functionality using plugins.
+But before integrating the mechanisms with Ktor, it is necessary to understand its architecture and how to extend its functionality using plugins.
 
 \subsection{Plugin}\label{subsec:plugin}
 
 In Ktor, a plugin is a reusable component that can be installed in an application to extend its functionality.
-They represent a way to encapsulate common functionality (e.g., logging, authentication, serialization, etc.) and make it reusable across different applications.
+They represent a way to encapsulate common tasks (e.g., logging, authentication, serialization, etc.) and make it reusable across different applications.
 Plugins are installed in the application's pipeline, where they can intercept and modify the request and response processing flow, as the Figure~\ref{fig:ktor-server-architecture} demonstrates for the server side.
 
 \begin{figure}[!htb]
@@ -213,7 +249,7 @@ On the server side, as a request comes in, it goes through a series of steps~\ci
     \item It is routed to the correct handler via the routing mechanism (which is also a plugin);
     \item Before being handed off to the handler, it goes through one or more Plugins;
     \item The handler (application logic) handles the request;
-    \item Before the response is sent to the client, it goes through one or more Plugins
+    \item Before the response is sent to the client, it goes through one or more Plugins.
 \end{boldenumerate}
 
 \subsection{Pipeline}\label{subsec:pipeline}
@@ -243,7 +279,7 @@ Tables~\ref{tab:ktor-server-pipelines} and~\ref{tab:ktor-client-pipelines} show 
     \vspace{0.3cm}
     \begin{tabular}{|l|p{6cm}|p{5cm}|p{5cm}|}
         \hline
-        \textbf{Pipeline}  & \textbf{Description}                        & \textbf{Phases}                                                               \\ \hline
+        \textbf{Pipeline}  & \textbf{Description}                        & \textbf{Ordered Phases}                                                       \\ \hline
         ApplicationSend    & Responsible for sending responses           & Before, Transform, Render, Content-Encoding, Transfer-Encoding, After, Engine \\ \hline
         ApplicationReceive & Responsible for receiving requests          & Before, Transform, After                                                      \\ \hline
         ApplicationCall    & Responsible for executing application calls & Setup, Monitoring, Plugins, Call, Fallback                                    \\ \hline
@@ -257,7 +293,7 @@ Tables~\ref{tab:ktor-server-pipelines} and~\ref{tab:ktor-client-pipelines} show 
     \vspace{0.3cm}
     \begin{tabular}{|l|p{6cm}|p{5cm}|p{5cm}|}
         \hline
-        \textbf{Pipeline} & \textbf{Description}                             & \textbf{Phases}                            \\ \hline
+        \textbf{Pipeline} & \textbf{Description}                             & \textbf{Ordered Phases}                    \\ \hline
         HttpRequest       & Processes all requests sent by the client        & Before, State, Transform, Render, Send     \\ \hline
         HttpSend          & Used for send a request                          & Before, State, Monitoring, Engine, Receive \\ \hline
         HttpReceive       & Used for receiving a response without processing & Before, State, After                       \\ \hline
@@ -287,5 +323,5 @@ For each mechanism, the following steps were taken:
     \item Ensure that the mechanism works correctly for all targets;
     \item Implement the Ktor Plugin that uses the mechanism;
     \item Write tests for the Ktor Plugin;
-    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a real Ktor use case application;
+    Due to time constraints, unit tests and integration tests were not conducted; however, functional tests~\cite{software-test-types} were performed using a sample Ktor application;
 \end{boldenumerate}

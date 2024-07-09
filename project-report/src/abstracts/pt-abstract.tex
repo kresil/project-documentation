@@ -1,5 +1,34 @@
 \chapter*{Resumo}\label{ch:resumo}
 
-TODO:
+% introdução:
+Este projeto aborda uma necessidade crítica no ecossistema Kotlin Multiplatform,
+ao desenvolver uma biblioteca dedicada à tolerância a falhas.
+Kotlin Multiplatform é uma tecnologia que permite aos programadores partilhar código em diversas plataformas, promovendo a reutilização e manutenção do mesmo.
 
-\textbf{Palavras-chave:} lista de palavras-chave separadas por ;.
+% objetivo:
+O objetivo principal é
+criar uma biblioteca Kotlin Multiplatform
+que ofereça mecanismos de resiliência (e.g., Retry, Circuit Breaker, Rate Limiter).
+Estes mecanismos, sozinhos ou combinados, previnem ou mitigam as inevitáveis falhas que
+ocorrem em sistemas distribuídos,
+que afectam a disponibilidade e a fiabilidade dos serviços.
+Além disso, o projeto visa integrar estes mecanismos na framework Ktor,
+a única Kotlin Multiplatform para a construção de serviços assíncronos de servidor e cliente.
+
+% metodologia:
+O projeto começou com uma revisão das soluções existentes para mecanismos de resiliência em várias plataformas e linguagens, de forma a identificar padrões e práticas comuns, bem como diferenças e limitações.
+Com este conhecimento,
+foi concebido um modelo para representar a interface comum a todos os mecanismos de resiliência implementados pela biblioteca - o Mechanism Model.
+O projeto explorou então cada um dos
+vários (mas não todos) mecanismos de resiliência,
+detalhando a sua funcionalidade,
+os pormenores de desenho e implementação, as capacidades de configuração, os valores por defeito associados a cada política e a sua integração na framework Ktor como plugins.
+
+% conclusão:
+Uma vez que o projeto se encontra em fase de desenvolvimento, o trabalho futuro inclui
+expandir a biblioteca com mecanismos de resiliência adicionais
+e melhorar ainda mais os seus testes e documentação.
+Desta forma, fornecer aos programadores um conjunto de ferramentas abrangente e fiável para a construção de sistemas distribuídos resilientes
+em Kotlin Multiplatform.
+
+\textbf{Palavras-chave:} Kotlin Multiplatform; biblioteca; tolerância a falhas; resiliência; sistemas distribuídos; framework Ktor
