@@ -1,7 +1,6 @@
-\chapter{Conclusion}\label{ch:conclusion}
+\chapter{Conclusions}\label{ch:conclusions}
 
-The development of this project was focused
-on addressing an important need
+The development of this project was motivated on addressing an important need
 for building reliable and robust distributed systems in the Kotlin Multiplatform ecosystem, which is the lack of a dedicated library for fault-tolerance.
 
 The aim was to develop a Kotlin Multiplatform library
@@ -37,6 +36,25 @@ including running them in a browser using Kotlin/JS.
 In summary, this project successfully developed and deployed a dedicated Kotlin Multiplatform library that offers essential resilience mechanisms, and includes a Ktor integration to leverage these mechanisms in server and client architectures.
 Although the project did not delve deeply into Kotlin-specific details or even programming-related topics, unless
 absolutely necessary, it aimed to follow the best practices for idiomatic Kotlin and library design principles.
+
+
+\section{Software Engineering Practices}\label{sec:software-engineering-practices}
+
+Continuous efforts were made throughout the project
+to adhere to the best practices for software development and project management.
+Utilizing GitHub Projects proved invaluable as it provided a comprehensive view of planned tasks,
+tasks in progress, tasks in review, and tasks completed, enabling asynchronous collaboration and real-time updates.
+Each issue created was accompanied by detailed considerations,
+ensuring thoughtful evaluation and organization of development tasks into pull requests and different branches.
+The default branch remained untouched until deemed merge-ready after a review process.
+This approach facilitated the tracking of progress
+and to ensure that the project was on track to meet the established goals.
+Learning and applying Git commit semantics ensured clear and readable intentions throughout the version control process.
+
+Additionally, proficiency in GitHub Actions enabled the development of workflows that streamlined CI/CD processes.
+As an example,
+a dedicated workflow was established for this document
+to ensure the remote version had the latest updates to be consulted at any time without the need to build it locally.
 
 
 \section{Future Work}\label{sec:future-work}
@@ -85,18 +103,3 @@ The following are some possible future work that can be done to enhance the libr
     This will allow developers to include only the necessary parts of the library, enhancing modularity and reducing the application's footprint.
     The same approach should be applied to the respective Ktor plugins.
 \end{itemize}
-
-
-\section{Work Methodology}\label{sec:work-methodology}
-
-Continuous efforts were made throughout the project to adhere to the best practices for software development and project management.
-Utilizing GitHub Projects proved invaluable as it provided a comprehensive view of planned tasks,
-tasks in progress, tasks in review, and tasks completed, enabling asynchronous collaboration and real-time updates.
-Each issue created was accompanied by detailed considerations,
-ensuring thoughtful evaluation and organization of development tasks into pull requests and different branches.
-The default branch remained untouched until deemed merge-ready and/or review-ready.
-
-Additionally, proficiency was gained in GitHub Actions to develop workflows that streamlined CI/CD processes.
-For this report, a dedicated workflow was established to maintain the most up-to-date version on the remote repository,
-ensuring continuous integration and accessibility.
-Learning and applying Git commit semantics ensured readability and clarity of intentions throughout the version control process.
