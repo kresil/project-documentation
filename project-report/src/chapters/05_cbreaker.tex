@@ -94,9 +94,7 @@ as illustrated in Figure~\ref{fig:cbreaker-decoration}.
 \end{figure}
 
 Regarding the underlying operation execution,
-it's important to note that the Circuit Breaker does not synchronize the received calls (i.e., it does not prevent multiple threads from invoking the operation concurrently when the circuit is in a state that allows the operation to be executed).
-
-To restrict the number of concurrent calls to the operation, the Bulkhead~\cite{microsoft-bulkhead-pattern} mechanism should be used in combination with the Circuit Breaker.
+it's important to note that the Circuit Breaker does not synchronize the received calls (i.e., it does not prevent multiple threads from invoking the operation concurrently when the circuit is in a state that allows the operation to be executed). To restrict the number of concurrent calls to the operation, the Bulkhead~\cite{microsoft-bulkhead-pattern} mechanism should be used in combination with the Circuit Breaker.
 
 \subsection{Recording Execution Results}\label{subsec:cbreaker-recording-execution-results}
 

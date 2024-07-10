@@ -154,7 +154,7 @@ Each mechanism implementation has two ways to register listeners for events:
 \begin{itemize}
     \item Receive all events emitted by the mechanism;
     \item Receive only a specific type of event emitted by the mechanism.
-    For this a filter is applied to the Flow to only emit events that match the specified type.
+    To achieve this, a filter is applied to the Flow.
 \end{itemize}
 
 The implementation also provides a way to cancel all registered listeners by leveraging the coroutine's structured concurrency~\cite{kotlin-coroutines}, which is useful for cleaning up resources when the mechanism is no longer needed.
@@ -193,7 +193,7 @@ To address this limitation, the operation types were redefined to support differ
 
 As the operations were intended for potential asynchronous contexts, the operation types were redefined to be suspendable, representing potentially suspendable operations.
 
-\subsection{Operation Context}\label{subsec:operation-context}
+\subsubsection{Operation Context}\label{subsubsec:operation-context}
 
 In later stages of development, it was considered to give the aforementioned operation types context-awareness,
 meaning that the operations would have access to the mechanism's execution context in an immutable state
@@ -242,7 +242,7 @@ But before integrating the mechanisms with Ktor, it is necessary to understand i
 
 In Ktor,
 a plugin is a reusable component that can be installed in an application
-(for Ktor server) or a HTTP client (for Ktor client) to extend its functionality.
+(for Ktor server) or an HTTP client (for Ktor client) to extend its functionality.
 They represent a way to encapsulate common tasks (e.g., logging, authentication, serialization, etc.) and make it reusable across different applications.
 Plugins are installed in the application's pipeline,
 where they can intercept and modify the request and response processing flow,
