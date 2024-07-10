@@ -3,31 +3,20 @@
 
 \section{Context}\label{sec:context}
 
-Our reliance on digital services has grown exponentially,
+Our reliance on digital services has grown considerably,
 driving the need for these services to be highly reliable and always available.
 Whether it's financial transactions, healthcare systems, or social media platforms, users expect uninterrupted access and seamless experiences.
 This expectation places significant pressure on the underlying infrastructure to handle failures gracefully and maintain service continuity.
-Achieving this level of reliability requires sophisticated mechanisms to manage and mitigate faults effectively.
+Achieving this level of reliability requires mechanisms to manage and mitigate faults effectively.
 
 Most of these services are built on distributed systems,
 which consist of independent networked computers that present themselves to users as a single coherent system~\cite{fcc-distributed-systems}.
 Given the complexity of these systems, they are susceptible to failures caused by a variety of factors such as hardware malfunctions, software bugs, network issues, communication problems, or even human errors.
-As such, it is crucial to ensure that services within distributed systems are resilient, and more specifically, fault-tolerant.
+As such, it is necessary to ensure that services within distributed systems are resilient, and more specifically, fault-tolerant.
 
-Fault-tolerance and fault-resilience are key concepts in this context, and while they are related and sometimes used interchangeably, they have subtle differences:
-
-\begin{itemize}
-    \item {\textbf{Fault-Tolerance}}:
-    A fault-tolerant service is a service that is able to maintain all or part of its functionality,
-    or provide an alternative, when one or more of its associated components fail.
-    The user does not observe see any fault except for some possible delay during which failover occurs;
-    \item {\textbf{Fault-Resilience}}: A fault-resilient service acknowledges faults but ensures that they do not impact committed data (i.e., the database may respond with an error to the attempt to commit a transaction, etc.).
-\end{itemize}
-
-These distinctions are important,
-because it is possible to regard a fault-tolerant service
-as suffering \textit{no} downtime even if the machine it is running on crashes,
-whereas the potential data fault in a fault-resilient service counts toward downtime~\cite{fault-tolerance-vs-fault-resilience}.
+A fault-tolerant service is a service that is able to maintain all or part of its functionality,
+or provide an alternative, when one or more of its associated components fail.
+The client does not observe any fault except for some possible delay during which failover occurs.
 
 \subsection{Resilience Mechanisms}\label{subsec:resilience-mechanisms}
 
@@ -54,14 +43,15 @@ Some of the most common mechanisms are described in Table~\ref{tab:resilience-pa
     \end{tabular}
 \end{table}
 
-These mechanisms can be further categorized based on when they are activated:
+These mechanisms can be used individually or combined to provide more complex resilience strategies.
+Additionally, they can be further categorized based on when they are activated:
 
 \begin{itemize}
     \item \textbf{Reactive Resilience}: Reacts to failures and mitigates their impact (e.g., the Retry mechanism is only triggered after a failure occurs);
     \item \textbf{Proactive Resilience}: Prevents failures from happening (e.g., the Rate Limiter mechanism is used to limit the rate of incoming requests, as a way to prevent the system from being overwhelmed and potentially fail - acts before a failure occurs).
 \end{itemize}
 
-\subsection{Technologies}\label{subsec:technologies}
+\subsection{Kotlin Multiplatform}\label{subsec:kotlin-multiplatform}
 
 Kotlin Multiplatform~\cite{kotlin-multiplatform} is a technology that allows sharing code across multiple platforms,
 such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
@@ -74,17 +64,15 @@ official support for Android development with Kotlin Multiplatform~\cite{android
 This recognition strengthened Kotlin Multiplatform as a viable technology for building multiplatform applications.
 
 As a recent technology that is still evolving,
-and only reached stable status late last year~\cite{kotlin-multiplatform-stable},
-it lacks the necessary tools (e.g., libraries, frameworks, etc.)
-that provide the functionalities that are common in other ecosystems.
+and only reached stable status late 2023~\cite{kotlin-multiplatform-stable},
+it lacks some of the necessary tools (e.g., libraries, frameworks, etc.)
+that provide functionalities that are common in other ecosystems.
 
 
 \section{Problem}\label{sec:problem}
 
 An analysis of the Kotlin Multiplatform ecosystem has revealed a significant gap:
 there is no specialized library that offers a wide variety of resilience mechanisms.
-This absence is a critical issue because resilience mechanisms are essential for building reliable and robust systems.
-
 To address this problem, it is important to develop a library that enables developers to integrate resilience mechanisms seamlessly into their projects, regardless of the platform they are targeting.
 
 
@@ -101,7 +89,7 @@ rate limiting the incoming requests on the server side~\cite{ktor-server-rate-li
 
 \subsection{Other Solutions}\label{subsec:other-solutions}
 
-\subsubsection{Traditional Libraries}
+\subsubsection{Platform-Specific Libraries}
 
 There are several libraries that provide resilience mechanisms for different programming languages and platforms.
 Table~\ref{tab:resilience_libraries} shows some examples of these libraries.
@@ -132,23 +120,26 @@ Polly was used as a secondary source to explore alternative approaches and desig
 The Arrow library,
 which presents itself as the functional companion to Kotlin's standard library, is a Kotlin Multiplatform library that
 focuses on functional programming and includes, among other modules, a resilience module.
-This module implements three of the most critical design patterns around resilience~\cite{arrow-resilience}:
+This module implements three of the most used design patterns around resilience~\cite{arrow-resilience}:
 retry and repeat computations using a \textit{Schedule},
 protect other services from being overloaded using a \textit{CircuitBreaker},
 and implement transactional behaviour in distributed systems in the form of a \textit{Saga}.
+
+However, the library does not include all considered essential resilience mechanisms, and the ones it does include are
+not as feature-rich as those offered by the aforementioned platform-specific libraries.
 
 
 \section{Project Goal}\label{sec:project-goal}
 
 The goal of this project is
-to develop a dedicated Kotlin Multiplatform library that provides some of the aforementioned resilience mechanisms.
+to develop a Kotlin Multiplatform library that provides some of the aforementioned resilience mechanisms.
 
-Additionally, the project aims to provide access to these mechanisms in the Ktor framework, using its extensibility features to create plugins.
+Additionally, the project aims to integrate these mechanisms in the Ktor framework, using its extensibility features to create plugins.
 This integration was considered because:
 
 \begin{itemize}
     \item Ktor is the only known Kotlin Multiplatform framework for server and client HTTP services development;
-    \item Immediately provide a way to use the library in a specific context - HTTP;
+    \item Immediately provide a way to use the library in a specific context - HTTP client and server services.
     \item Validate the implementation and extensibility of the library.
 \end{itemize}
 
@@ -157,7 +148,7 @@ The library should be easy to use and configure, taking advantage of Kotlin's la
 According to the time available for the project, the scope was limited to the implementation of the following resilience mechanisms and their respective plugins for the Ktor framework:
 
 \begin{itemize}
-    \item Retry and Plugin Mechanism for Ktor Client;
+    \item Retry Mechanism and Plugin for Ktor Client;
     \item Circuit Breaker Mechanism and Plugin for Ktor Client;
     \item Rate Limiter Mechanism and Plugin for Ktor Server.
 \end{itemize}
@@ -169,19 +160,13 @@ as well as documentation to guide developers on how to use them.
 
 \section{Document Structure}\label{sec:document-structure}
 
-This document is structured as follows:
+The remaining of this document is structured as follows:
 
 \begin{itemize}
     \item \textbf{Chapter 2 - Kotlin Multiplatform}: Provides an overview of the Kotlin Multiplatform technology, its architecture, and how it can be used to share code across multiple platforms.
     Additionally, it describes the template used, the adopted project structure, and how to run tests in a multiplatform context;
     \item \textbf{Chapter 3 - Common Design and Implementation Strategy}: Describes the design and implementation aspects that are common to all the resilience mechanisms.
     Additionally, it describes the Ktor framework and how it was used in the project;
-    \item \textbf{Chapter 4 - Retry}: Describes the Retry mechanism functionality, its configuration and how it was implemented in both the library and as a plugin for the Ktor framework;
-    \item \textbf{Chapter 5 - Circuit Breaker}: Same as the previous chapter, but for the Circuit Breaker mechanism;
-    \item \textbf{Chapter 6 - Rate Limiter}: Same as the previous chapter, but for the Rate Limiter mechanism;
+    \item \textbf{Chapter 4, 5, 6 - Retry, Circuit Breaker, Rate Limiter}: Each of these chapters describes the functionality, configuration, and implementation of the respective resilience mechanism in the library and as a plugin for the Ktor framework;
     \item \textbf{Chapter 7 - Conclusion}: This chapter provides a summary of the project, work methodology, and future work.
 \end{itemize}
-
-Additionally, the document intentionally avoids detailed discussions of Kotlin-specific or even programming-specific details,
-delving into them only when necessary.
-Instead, it aims to provide a foundation for implementing these mechanisms in other languages and platforms.
