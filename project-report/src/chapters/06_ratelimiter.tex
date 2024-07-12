@@ -370,6 +370,8 @@ independently for each key.
 This approach is useful for scenarios
 where different clients or users have different rate limits based on their usage patterns or SLAs,
 and the abuse of one client does not affect the rate limit of another.
+Additionally, the same rate limiter configuration can be used to limit the rate of requests based on different keys,
+leveraging the composition aspect even further.
 
 \begin{figure}[!htb]
     \centering
@@ -527,12 +529,76 @@ The Rate Limiter emits events to notify listeners when a request to a rate-limit
 
 \section{Ktor Integration}\label{sec:rate-limiter-ktor-integration}
 
-TODO()
+The Rate Limiter plugin integrates with Ktor by implementing a custom plugin that manages rate limiting for HTTP requests in the application's pipeline.
 
 \subsection{Plugin Implementation}\label{subsec:rate-limiter-plugin}
 
-TODO()
+The plugin uses the Keyed Rate Limiter to control the rate of incoming requests based on a configurable key
+(e.g., client IP, user agent).
+Initially, the key was enforced to be a string,
+but it was later changed to be a type that represents any key that can be used to identify a request (e.g., a map).
+
+
+The plugin intercepts incoming HTTP requests at a configurable phase in the application pipeline.
+By default,
+it intercepts requests in the first phase of the process
+to ensure that rate limiting is applied as early as possible in order to avoid unnecessary processing.
+However, requests can be rate-limited at any phase in the pipeline by configuring the intercept phase,
+to handle more complex scenarios
+(e.g., need to access more request information which is only available in later phases of the pipeline to determine the rate limit key).
+
+When a request is rate-limited,
+the plugin provides a callback to handle the rejected request to allow for custom behavior,
+such as placing a \textit{Retry-After} header in the response to inform the client when they can retry the request.
+
+In developing the plugin,
+there were thoughts of including blacklisting or whitelisting certain requests from rate limiting,
+even the concept of shadow banning.
+Ultimately,
+it was decided, due to time constraints, to exclude these features
+and solely provide a way to exclude requests from rate limiting based on request properties (e.g., path).
+To determine if a request is excluded from rate limiting or acquired permits,
+request attributes were used to transfer state information between the different phases of the pipeline.
+
+Since the plugin uses a \textit{Semaphore-based Rate Limiter} which itself implements a \textit{counting} semaphore,
+it was deemed necessary to give the caller the ability to calculate the weight of a call for rate limiting.
+This way, the caller can determine how many permits a request should acquire based on request properties (e.g., bytes transferred).
+
+On a successful request that has passed rate limiting, the plugin provides a callback to handle the response,
+allowing for custom behavior to be executed (e.g., adding a custom header to the response to indicate that the request was rate-limited, how many requests are left until the rate limit is reached, etc.).
+
+Additionally, on application shutdown,
+the plugin ensures that any opened resources are properly disposed of to prevent resource leaks,
+as each rate limiter enforces a disposable pattern.
+
+The plugin allows for two levels of configuration:
+
+\begin{itemize}
+    \item \textbf{Global Configuration}: The default configuration for the Rate Limiter mechanism, which applies to all requests by default;
+    \item \textbf{Route-Specific Configuration}: Custom configuration for specific routes or endpoints, allowing for fine-grained control over rate limiting behavior.
+\end{itemize}
 
 \subsection{Configuration}\label{subsec:rate-limiter-configuration}
 
-TODO()
+The Rate Limiter Ktor plugin can be configured using a dedicated configuration builder with the properties listed in Table~\ref{tab:rate-limiter-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{RateLimiterPluginConfigBuilder}}
+    \label{tab:rate-limiter-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}   & \textbf{Default Value/Behaviour}                                                       & \textbf{Description}                                                         \\ \hline
+        \texttt{rateLimiterConfig} & \texttt{FixedWindowCounter[ totalPermits=1000, replenishmentPeriod=1m, queueLength=0]} & The configuration for the Rate Limiter mechanism. \\ \hline
+        \texttt{keyResolver}       & \texttt{call -> concatenates the remote host and user agent from the call's request} & A function to resolve the key for rate limiting from the application call. \\ \hline
+        \texttt{onRejectedCall} & \texttt{(call, retryAfterDuration) -> adds a response `Retry-After'
+        header with the retry duration in seconds and status code 429
+            (Too Many Requests).} & A callback to handle requests that are rejected due to rate limiting. \\ \hline
+        \texttt{onSuccessCall} & adds a response `X-Rate-Limited' header with a value of `false'.
+        & A callback to handle successful requests that have passed rate limiting. \\ \hline
+        \texttt{excludePredicate}  & \texttt{call -> false}                                                                 & A predicate to determine if a request should be excluded from rate limiting. \\ \hline
+        \texttt{interceptPhase}    & first phase                                                                            & The phase in the application pipeline to intercept for rate limiting.        \\ \hline
+        \texttt{callWeight}        & \texttt{call -> 1}                                                                     & A function to calculate the weight of a call for rate limiting.              \\ \hline
+    \end{tabular}
+\end{table}
