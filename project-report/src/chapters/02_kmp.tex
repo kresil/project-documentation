@@ -51,7 +51,7 @@ Some of the most relevant tasks include:
 \begin{itemize}
     \item \textbf{build}: Compiles and assembles the project;
     \item \textbf{allTests}: Runs the test cases for all platforms.
-    To run platform-specific tests, use the \texttt{<Platform>Test} task (e.g., \textit{jvmTest});
+    To run platform-specific tests, use the \texttt{<Platform> Test} task (e.g., \textit{jvmTest});
     \item \textbf{check}: Performs various checks on the project, including running tests and performing additional operations (e.g., linting, code analysis);
     \item \textbf{clean}: Deletes the build directory, allowing for a clean build (i.e., not using cached artifacts).
 \end{itemize}
@@ -103,7 +103,7 @@ Below is a brief description of each folder, with an emphasis on the \textit{src
 For developing the KMP library, a different template structure was adopted, specifically replacing the \textit{library} module from the original template with the following structure:
 
 \begin{itemize}
-    \item \textbf{\texttt{<}kmp\_package\_name\texttt{>}}: name of a KMP library in root directory;
+    \item \textbf{\texttt{<}kmp\_library\_name\texttt{>}}: name of a KMP library in root directory;
     \begin{itemize}
         \item \textbf{apps}: defines the modules that will consume the KMP library (e.g.,\textttt{js-app}, \texttt{android-app});
         \item \textbf{lib or shared}: defines the library's code to be shared by the consuming modules;

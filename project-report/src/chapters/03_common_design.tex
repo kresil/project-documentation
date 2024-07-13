@@ -29,7 +29,7 @@ This model, named the Mechanism Model, is composed of multiple components, with 
     \item \textbf{Metrics}: The mechanism's implementation component is responsible for recording metrics related to the mechanism's execution (e.g., number of retries, number of recorded failures, etc.).
     These metrics can be used for monitoring and analysis purposes;
     \item \textbf{Decorator}: The decorator is an extension of the Implementation component.
-    It is inspired on Resilience4J~\cite{resilience4j} decorators, and provides a convenient way to wrap code blocks with the mechanism's behaviour;
+    It is inspired on the Resilience4J library~\cite{resilience4j} decorators, and provides a convenient way to wrap code blocks with the mechanism's behaviour;
     \item \textbf{Ktor Plugin}: Responsible for the integration of the mechanism implementation with the Ktor pipeline.
     The Configuration component is also used to create a specific plugin configuration, which extends the mechanism's behavior and adds additional features in an HTTP context.
 \end{itemize}

@@ -96,7 +96,7 @@ which can't be achieved with the standard delay strategies.
 \subsection{Ignoring Exceptions}\label{subsec:retry-ignoring-exceptions}
 
 The idea of ignoring exceptions that shouldn’t trigger a retry was initially considered,
-by adding an extra configuration property (as offered by Resilience4j~\cite{resilience4j-retry}).
+by adding an extra configuration property (as offered by the Resilience4j library~\cite{resilience4j-retry}).
 However,
 it was decided
 that the \textit{retry-on-error} should be the only policy
@@ -133,7 +133,7 @@ and has access to the configuration settings defined for the Retry mechanism.
 Additionally, it emits events to potential listeners.
 
 In the later stages of development,
-the retry context was made available to the operation being retried (see Section~\ref{subsec:operation-context}),
+the retry context was made available to the operation being retried (see Section~\ref{subsubsec:operation-context}),
 allowing it to access the context and potentially alter its behaviour based on an immutable version of its state.
 
 \subsubsection{Event Emission}\label{subsubsec:retry-context-event-emission}

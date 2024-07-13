@@ -108,11 +108,11 @@ Table~\ref{tab:resilience_libraries} shows some examples of these libraries.
     \end{tabular}
 \end{table}
 
-Hystrix served as an inspiration for Resilience4J, which is based on functional programming concepts.
+The Hystrix library served as an inspiration for Resilience4J, which is based on functional programming concepts.
 The primary distinction between the two is that, whereas Resilience4J relies on function composition to let the caller stack the specific decorators it needs by utilizing Java 8's features (e.g., functional interfaces, lambda expressions)~\cite{resilience4j-vs-hystrix}, Hystrix embraces an object-oriented design where calls to external systems have to be wrapped in a \textit{HystrixCommand} offering multiple functionalities.
 
-Resilience4j served as the main source of inspiration for the project's development since it was considered a more modern way of implementing these mechanisms, follows a functional programming style, and is more in line with the characteristics of the Kotlin language.
-Polly was used as a secondary source to explore alternative approaches and design patterns that could be used in the project.
+The Resilience4j library served as the main source of inspiration for the project's development since it was considered a more modern way of implementing these mechanisms, follows a functional programming style, and is more in line with the characteristics of the Kotlin language.
+The Polly library was used as a secondary source to explore alternative approaches and design patterns that could be used in the project.
 
 \subsubsection{Arrow Library}
 
