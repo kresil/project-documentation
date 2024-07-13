@@ -42,13 +42,14 @@ Advantages of using a Rate Limiter include~\cite{solo-io-rate-limiting, kong-rat
     \item \textbf{Reduce Costs}: Helps avoid extra costs associated with overloading resources, as limiting request rates reduces the demand on resources and prevents the need for additional capacity.
 \end{itemize}
 
-\subsection{API Gateway}\label{subsec:rate-limiter-api-gateway}
-
-An API Gateway is a server or software application that acts as an intermediary between clients and backend services or microservices.
-It serves as a single entry point for API calls, managing and routing them to the appropriate services, while also providing various functionalities to enhance security, performance, and usability.
-
-One of the key features~\cite{api-gateway} of an API Gateway's traffic management is the implementation of rate limiting and throttling policies.
-These policies control the rate of incoming requests and set rules and limits to regulate traffic, preventing the overloading of backend services.
+One common implementation of rate limiting is through the use of an API Gateway,
+which acts as an intermediary between clients and backend services.
+It serves as a single entry point for API calls,
+managing and routing them to the appropriate services while also providing various functionalities to enhance security,
+performance, and usability.
+Key features of an API Gateway's traffic management include the implementation of rate limiting and throttling policies.
+These policies control the rate of incoming requests and set rules and limits to regulate traffic,
+preventing the overloading of backend services~\cite{api-gateway}.
 
 \subsection{Relation to the Throttling Mechanism}\label{subsec:rate-limiter-throttling}
 
@@ -96,7 +97,7 @@ In the context of rate limiting, a semaphore can be used to control the rate of 
 There are several algorithms that can be used to implement rate limiting, each with benefits and drawbacks to consider.
 Therefore, the choice depends on the specific requirements of the system and the challenges it faces
 (i.e., implementation on a single server or distributed system, handling bursty traffic, etc.)
-~\cite{medium-rate-limiting-algorithms,nordic-apis-rate-limiting-algorithms}:
+~\cite{medium-rate-limiting-algorithms,nordic-apis-rate-limiting-algorithms}.
 
 \subsubsection{Token Bucket}\label{subsubsec:token-bucket-algorithm}
 
@@ -116,8 +117,8 @@ The key features of the Token Bucket algorithm include:
 
 This algorithm provides a variable request rate and is suitable for handling bursts of requests,
 as long as the bucket has enough tokens to accommodate them.
-It can be implemented by a semaphore with no release operation,
-as the permits are automatically refilled at a constant rate.
+It can be implemented by a semaphore that releases permits in an automated process,
+without the need for callers to manually release them.
 
 \subsubsection{Leaky Bucket}\label{subsubsec:leaky-bucket-algorithm}
 
@@ -125,10 +126,10 @@ The Leaky Bucket algorithm is another rate limiting algorithm used in network tr
 This algorithm's advantage is that it smooths out bursts of requests
 and processes them at an approximately constant rate (analogous to water leaking out of a bucket at a constant rate).
 
-However,
-a burst of traffic can starve more recent requests from being processed
-while providing no guarantee that requests get processed in a fixed amount of time.
-Additionally, if load balancing servers for fault tolerance or increased throughput, a policy must be used to coordinate and enforce the limit between them~\cite{kong-rate-limiting}.
+The bucket has a fixed capacity and a leak rate that determines how quickly the bucket empties.
+When a request arrives, it is placed in the bucket.
+When the rate of incoming requests exceeds the leak rate, the bucket fills up and overflows,
+causing the requests to be rejected or marked as non-conformant.
 
 \subsubsection{Fixed Window Counter}\label{subsubsec:fixed-window-counter-algorithm}
 
@@ -223,7 +224,7 @@ The most common approaches include:
 \subsection{Types of Rate Limiting}\label{subsec:rate-limiter-types}
 
 Besides the algorithm-based classification, rate limiting can be implemented in various ways depending on the criteria used to limit the rate of requests.
-A few common types of rate limiting include:
+A few common types of rate limiting include~\cite{redis-rate-limiting}:
 \begin{itemize}
     \item \textbf{Total Requests}: Limits the total number of requests to a service within a given time period;
     \item \textbf{Key-Based}: Limits requests based on specific keys, such as user ID, IP address, or API key,
@@ -235,12 +236,13 @@ A few common types of rate limiting include:
 \subsubsection{Available Solutions}\label{subsubsec:rate-limiter-solutions}
 
 Following some of the state-of-the-art libraries that provide rate limiting solutions,
-Resilience4j offers two distinct implementations: an atomic Rate Limiter and a semaphore-based Rate Limiter.
-The atomic Rate Limiter uses lock-free algorithms and non-blocking operations to control the rate of requests,
-while the semaphore-based Rate Limiter employs a lock-based semaphore and a scheduler to refill it,
-blocking requests when the rate limit is exceeded.
+The Resilience4j library~\cite{resilience4j} offers two distinct implementations: an atomic Rate Limiter and a semaphore-based Rate Limiter.
+The atomic Rate Limiter uses atomic operations to control the rate of requests,
+where the caller threads themselves are responsible for managing the rate limit state.
+In contrast, the semaphore-based Rate Limiter employs a lock-based semaphore and a scheduler to refill it,
+passively blocking requests when the rate limit is exceeded.
 
-Polly provides a thin layer over the .NET \texttt{System.Threading.RateLimiting}~\cite{microsoft-rate-limiting-dotnet} package, which includes, besides the algorithm-based, the following rate limiting implementations:
+The Polly library~\cite{polly-dotnet} provides a thin layer over the .NET \texttt{System.Threading.RateLimiting}~\cite{microsoft-rate-limiting-dotnet} package, which includes, besides the aforementioned rate limiting algorithms, the following additional rate limiting implementations:
 \begin{itemize}
     \item \texttt{ConcurrencyLimiter}: Limits the number of concurrent requests that can be made to a service;
     \item \texttt{PartitionedRateLimiter}: Allows rate limiting based on different keys or partitions;
@@ -250,7 +252,7 @@ Polly provides a thin layer over the .NET \texttt{System.Threading.RateLimiting}
 \end{itemize}
 
 Additionally, the package allows configuration of custom policies for handling rate limit exceedances, including queue processing strategies (e.g., newest first, oldest first) and auto-replenishment of permits.
-Just as Resilience4j, Polly offers a lock-free version of the Token Bucket algorithm for improved performance in high-throughput scenarios.
+Just as Resilience4j, the Polly library offers a lock-free version of the Token Bucket algorithm for improved performance in high-throughput scenarios.
 
 At the time of writing, none of the mentioned libraries provide a distributed rate limiting solution,
 which is a common requirement in modern architectures where services are deployed across multiple nodes.
@@ -312,14 +314,12 @@ The implementation uses a counting semaphore based on a specified algorithm
 (e.g., Token Bucket, Fixed Window Counter) to apply rate limiting behaviour, namely,
 the replenishment of permits as described in the respective sections.
 
-Note that how long a request holds $n$ permits is not the responsibility of the Rate Limiter itself.
-The caller or the rate-limited service should ensure proper timeout handling to avoid a request holding permits indefinitely.
-
 \subsubsection{Synchronization Style}\label{subsubsec:rate-limiter-synchronization-style}
 
 The adopted synchronization style for the semaphore-based Rate Limiter was the Kernel or Delegation of execution in favor of the Monitor style.
 
-In the Monitor style of synchronization, the thread that creates or sees favorable conditions for other threads to advance to the next state, will signal those threads. It is the responsibility of those other threads to complete their own request of sorts after they exit the condition where they were waiting upon.
+In the Monitor style of synchronization, the thread that creates or sees favorable conditions for other threads to advance to the next state, will signal those threads.
+It is the responsibility of those other threads to complete their own request of sorts after they exit the condition where they were waiting upon.
 
 In the Kernel or Delegation of execution synchronization style,
 the thread that creates or sees favorable conditions for other threads to advance to the next state is responsible
@@ -340,8 +340,7 @@ when awakened, has to recheck it which could have changed in the meantime.
 \subsubsection{Algorithm Template}\label{subsubsec:rate-limiter-algorithm-template}
 
 Initially, the semaphore-based Rate Limiter only supported the Fixed Window Counter algorithm indirectly.
-However, the API has been redesigned to be extensible, based on the Template Method pattern,
-allowing for the integration of the various rate limiting algorithms.
+However, the API has been redesigned to be extensible, based on the Template Method pattern~\cite{design-patterns} allowing for the integration of the various rate limiting algorithms.
 This new design provides callers with the flexibility to choose the algorithm that best suits their use case
 and future additions of new algorithms without modifying the existing code.
 
@@ -370,6 +369,8 @@ independently for each key.
 This approach is useful for scenarios
 where different clients or users have different rate limits based on their usage patterns or SLAs,
 and the abuse of one client does not affect the rate limit of another.
+Additionally, the same rate limiter configuration can be used to limit the rate of requests based on different keys,
+leveraging the composition aspect even further.
 
 \begin{figure}[!htb]
     \centering
@@ -450,8 +451,10 @@ the optimal time for the client to retry is at the beginning of the next time wi
 (i.e., the retry duration is algorithm-specific).
 
 With this information,
-an (outer) retry mechanism can be configured in the pipeline before the
+an (outer) Retry mechanism can be configured in the pipeline before the
 (inner) Rate Limiter to retry the request after the recommended duration.
+Note that this behaviour can only be possible
+if the Retry mechanism is sensitive to the Rate Limiter's rejection response.
 
 Additionally, to calculate the retry-after duration, the Rate Limiter should not assume a queue is configured.
 As such,
@@ -527,12 +530,76 @@ The Rate Limiter emits events to notify listeners when a request to a rate-limit
 
 \section{Ktor Integration}\label{sec:rate-limiter-ktor-integration}
 
-TODO()
+The Rate Limiter plugin integrates with Ktor by implementing a custom plugin that manages rate limiting for HTTP requests in the application's pipeline.
 
 \subsection{Plugin Implementation}\label{subsec:rate-limiter-plugin}
 
-TODO()
+The plugin uses the Keyed Rate Limiter to control the rate of incoming requests based on a configurable key
+(e.g., client IP, user agent).
+Initially, the key was enforced to be a string,
+but it was later changed to be a type that represents any key that can be used to identify a request (e.g., a map).
+
+
+The plugin intercepts incoming HTTP requests at a configurable phase in the application pipeline.
+By default,
+it intercepts requests in the first phase of the process
+to ensure that rate limiting is applied as early as possible in order to avoid unnecessary processing.
+However, requests can be rate-limited at any phase in the pipeline by configuring the intercept phase,
+to handle more complex scenarios
+(e.g., need to access more request information which is only available in later phases of the pipeline to determine the rate limit key).
+
+When a request is rate-limited,
+the plugin provides a callback to handle the rejected request to allow for custom behavior,
+such as placing a \textit{Retry-After} header in the response to inform the client when they can retry the request.
+
+In developing the plugin,
+there were thoughts of including blacklisting or whitelisting certain requests from rate limiting,
+even the concept of shadow banning.
+Ultimately,
+it was decided, due to time constraints, to exclude these features
+and solely provide a way to exclude requests from rate limiting based on request properties (e.g., path).
+To determine if a request is excluded from rate limiting or acquired permits,
+request attributes were used to transfer state information between the different phases of the pipeline.
+
+Since the plugin uses a \textit{Semaphore-based Rate Limiter} which itself implements a \textit{counting} semaphore,
+it was deemed necessary to give the caller the ability to calculate the weight of a call for rate limiting.
+This way, the caller can determine how many permits a request should acquire based on request properties (e.g., bytes transferred).
+
+On a successful request that has passed rate limiting, the plugin provides a callback to handle the response,
+allowing for custom behavior to be executed (e.g., adding a custom header to the response to indicate that the request was rate-limited, how many requests are left until the rate limit is reached, etc.).
+
+Additionally, on application shutdown,
+the plugin ensures that any opened resources are properly disposed of to prevent resource leaks,
+as each rate limiter enforces a disposable pattern.
+
+The plugin allows for two levels of configuration:
+
+\begin{itemize}
+    \item \textbf{Global Configuration}: The default configuration for the Rate Limiter mechanism, which applies to all requests by default;
+    \item \textbf{Route-Specific Configuration}: Custom configuration for specific routes or endpoints, allowing for fine-grained control over rate limiting behavior.
+\end{itemize}
 
 \subsection{Configuration}\label{subsec:rate-limiter-configuration}
 
-TODO()
+The Rate Limiter Ktor plugin can be configured using a dedicated configuration builder with the properties listed in Table~\ref{tab:rate-limiter-config-builder}.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Configuration Properties for \texttt{RateLimiterPluginConfigBuilder}}
+    \label{tab:rate-limiter-config-builder}
+    \vspace{0.3cm}
+    \begin{tabular}{|l|p{5cm}|p{6cm}|}
+        \hline
+        \textbf{Config Property}   & \textbf{Default Value/Behaviour}                                                       & \textbf{Description}                                                         \\ \hline
+        \texttt{rateLimiterConfig} & \texttt{FixedWindowCounter[ totalPermits=1000, replenishmentPeriod=1m, queueLength=0]} & The configuration for the Rate Limiter mechanism. \\ \hline
+        \texttt{keyResolver}       & \texttt{call -> concatenates the remote host and user agent from the call's request} & A function to resolve the key for rate limiting from the application call. \\ \hline
+        \texttt{onRejectedCall} & \texttt{(call, retryAfterDuration) -> adds a response `Retry-After'
+        header with the retry duration in seconds and status code 429
+            (Too Many Requests).} & A callback to handle requests that are rejected due to rate limiting. \\ \hline
+        \texttt{onSuccessCall} & adds a response `X-Rate-Limited' header with a value of `false'.
+        & A callback to handle successful requests that have passed rate limiting. \\ \hline
+        \texttt{excludePredicate}  & \texttt{call -> false}                                                                 & A predicate to determine if a request should be excluded from rate limiting. \\ \hline
+        \texttt{interceptPhase}    & first phase                                                                            & The phase in the application pipeline to intercept for rate limiting.        \\ \hline
+        \texttt{callWeight}        & \texttt{call -> 1}                                                                     & A function to calculate the weight of a call for rate limiting.              \\ \hline
+    \end{tabular}
+\end{table}

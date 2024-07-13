@@ -1,7 +1,7 @@
 \chapter{Kotlin Multiplatform}\label{ch:kotlin-multiplatform}
 
-This chapter provides an overview of the technology, including its architecture, template structure, and other aspects relevant to the development of a multiplatform library.
-The Kotlin Multiplatform (KMP) technology allows developers to share code across multiple platforms, such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
+This chapter provides an overview of the Kotlin Multiplatform (KMP) technology, including its architecture, template structure, and other aspects relevant to the development of a multiplatform library.
+This technology allows developers to share code across multiple platforms, such as Android and iOS for mobile applications, and/or JVM, JavaScript and Native for multiplatform overall.
 
 
 \section{Architecture}\label{sec:architecture}
@@ -14,8 +14,8 @@ A KMP project is divided into three main categories of code:
     \item \textbf{Specific}: Code specific to a target platform (i.e., \texttt{\textit{<Platform>Main}}, \texttt{\textit{<Platform>Test}}).
 \end{itemize}
 
-
-An example of a KMP project architecture can be seen in Figure~\ref{fig:kmp-architecture}, but note that both \textit{Intermediate} and \textit{Specific} categories are optional.
+Figure~\ref{fig:kmp-architecture} illustrates an example of a KMP project architecture.
+Note that both the \textit{Intermediate} and \textit{Specific} categories are optional.
 
 \begin{figure}[!htb]
     \centering
@@ -34,8 +34,8 @@ and deploying a multiplatform library for most platforms.
 
 \subsection{Gradle Tasks}\label{subsec:available-gradle-tasks}
 
-Gradle is a build automation tool for multi-language software development.
-Offers support for all phases of a build process including compilation, verification, dependency resolving, test execution, source code generation, packaging and publishing~\cite{gradle}.
+Gradle~\cite{gradle} is an open-source build automation tool for software construction which supports multiple programming languages, including Kotlin.
+Offers support for all phases of a build process including compilation, verification, dependency resolving, test execution, source code generation, packaging and publishing.
 
 In a Gradle build using Kotlin DSL (domain-specific language), a project's configuration is primarily defined in two key files:
 
@@ -45,17 +45,15 @@ In a Gradle build using Kotlin DSL (domain-specific language), a project's confi
     \item \textbf{settings.gradle.kts} - Defines a project's structure and modules it contains.
 \end{itemize}
 
-In Gradle, tasks are the smallest unit of work that can be executed and are used to perform specific actions.
-The templated uses the KMP plugin which includes several pre-configured Gradle tasks to facilitate building, testing,
-and managing a project across multiple platforms configured as targets in the respective \textit{build gradle} file.
-Some of the key tasks are:
+In Gradle, tasks are the smallest unit of work that can be executed and are used to perform specific actions. The template uses the KMP plugin, which defines several Gradle tasks to assist in building, testing, and managing a project across multiple platforms configured as targets in the respective \textit{build.gradle} file.
+Some of the most relevant tasks include:
 
 \begin{itemize}
-    \item \textbf{Build}: Compiles and assembles the project;
-    \item \textbf{AllTests}: Runs the test cases for all platforms.
-    To run platform-specific tests, use the \texttt{<Platform>Test} task (e.g., \textit{jvmTest});
-    \item \textbf{Check}: Performs various checks on the project, including running tests and performing additional operations (e.g., linting, code analysis);
-    \item \textbf{Clean}: Deletes the build directory, allowing for a clean build (i.e., not using cached artifacts).
+    \item \textbf{build}: Compiles and assembles the project;
+    \item \textbf{allTests}: Runs the test cases for all platforms.
+    To run platform-specific tests, use the \texttt{<Platform> Test} task (e.g., \textit{jvmTest});
+    \item \textbf{check}: Performs various checks on the project, including running tests and performing additional operations (e.g., linting, code analysis);
+    \item \textbf{clean}: Deletes the build directory, allowing for a clean build (i.e., not using cached artifacts).
 \end{itemize}
 
 A Gradle project can be organized into multiple subprojects, each with its own build file, settings and tasks.
@@ -68,7 +66,7 @@ The configurations for GitHub Actions are located in the \textit{.github/workflo
 \begin{itemize}
     \item \textbf{gradle.yml} - Builds and tests the project using Gradle against some of the available platforms.
     Runs on push and pull request git events to the default branch;
-    \item \textbf{deploy.yml} - deploys the library artifacts to a repository in Maven Central~\cite{maven-central}, following a pre-defined authentication configuration.
+    \item \textbf{deploy.yml} - Deploys the library artifacts to a repository in Maven Central~\cite{maven-central}, following a pre-defined authentication configuration.
 \end{itemize}
 
 \subsection{Folder Structure}\label{subsec:folder-structure}
@@ -102,19 +100,21 @@ Below is a brief description of each folder, with an emphasis on the \textit{src
     \item \textbf{settings.gradle.kts}: Configures the Gradle build settings for the project, including the root project name and module inclusion.
 \end{itemize}
 
-Based on the described template's project structure, the following structure was adopted for developing a KMP library:
+For developing the KMP library, a different template structure was adopted, specifically replacing the \textit{library} module from the original template with the following structure:
 
 \begin{itemize}
-    \item \textbf{\texttt{<}kmp\_package\_name\texttt{>}}: name of the KMP library in root directory;
+    \item \textbf{\texttt{<}kmp\_library\_name\texttt{>}}: name of a KMP library in root directory;
     \begin{itemize}
         \item \textbf{apps}: defines the modules that will consume the KMP library (e.g.,\textttt{js-app}, \texttt{android-app});
-        \item \textbf{lib/shared}: defines the library's code to be shared by the consuming modules;
+        \item \textbf{lib or shared}: defines the library's code to be shared by the consuming modules;
         \begin{itemize}
             \item \textbf{src}: defines the target submodules of the library including their test counterparts (i.e., \texttt{<Platform>Main}, \texttt{<Platform>Test});
             \item \textbf{build.gradle.kts}: defines the library's dependencies, targets, and additional configurations.
         \end{itemize}
     \end{itemize}
 \end{itemize}
+
+The same approach was used for organizing the Ktor Client and Server Plugin modules, which are also Kotlin Multiplatform libraries.
 
 
 \section{Platform-Dependent Code}\label{sec:platform-dependent-code}
@@ -130,8 +130,12 @@ However, it is sometimes necessary to create specific code for a given platform,
     in Kotlin, from the native code of the \textit{target}, which can be defined in the \textit{Intermediate} or \textit{Specific} categories.
 \end{itemize}
 
-To create specific code for a \textit{target}, the mechanism \textit{expect/actual}~\cite{kmp-expect-actual} is used.
-This mechanism allows defining the code to be implemented in an abstracted way and its implementation, respectively.
+In such cases,
+platform-specific implementations can be defined in the \textit{Intermediate} or \textit{Specific} categories.
+One approach is through the \textit{expect/actual}~\cite{kmp-expect-actual} mechanism.
+This mechanism allows for defining abstracted code and its platform-specific implementation.
+However, there are other methods available for achieving platform-specific functionality,
+such as the described \textit{adapter}.
 
 
 \section{Supported Targets}\label{sec:supported-targets}
@@ -148,7 +152,7 @@ The project supports the following targets:
 
 \section{Kotlin Library Practices}\label{sec:kotlin-library-practices}
 
-The library follows the best practices for developing a Kotlin library, including:
+The library strives to follow the best practices for developing a Kotlin library, including:
 
 \begin{itemize}
     \item Adherence to \href{https://kotlinlang.org/docs/coding-conventions.html#coding-conventions-for-libraries}{Kotlin Coding Conventions for Libraries} to ensure consistency and readability;
@@ -161,8 +165,19 @@ The library follows the best practices for developing a Kotlin library, includin
 When developing a multiplatform library, it was necessary to consider the following aspects, which may be harder to manage in a multiplatform context:
 
 \begin{itemize}
-    \item \textbf{Concurrency}: Techniques and tools used to manage concurrency, ensuring thread safety and performance across platforms;
-    \item \textbf{Time Representation and Measurement}: Strategies for representing and measuring time consistently across platforms;
-    \item \textbf{Logging}: Implementation of logging to facilitate debugging and monitoring;
+    \item \textbf{Concurrency}: Techniques and tools used to manage concurrency,
+    ensuring thread safety and performance across platforms.
+    It's important to note that KMP's concurrency model primarily revolves around coroutines,
+    which may use threads depending on the platform's dispatchers.
+    Understanding platform-specific concurrency models is crucial
+    as the guarantees and limitations can vary significantly
+    (e.g., Kotlin/Native does not rely on Java's Memory Model~\cite{java-memory-model}.
+    \item \textbf{Time Representation and Measurement}:
+    Strategies for representing and measuring time consistently across platforms.
+    For instance, not all platforms guarantee the same precision or accuracy in time measurements, nor provide a monotonic time source;
+    \item \textbf{Synchronous vs Asynchronous}: Depending on the platform, the code might need to accommodate either synchronous operations or asynchronous operations.
+    For example, JavaScript being single-threaded limits operations to asynchronous execution for non-blocking behavior.
+    \item \textbf{Delay without active Blocking}: Strategies for implementing delays without actively blocking the thread (e.g., can't use \textit{Thread.sleep});)
     \item \textbf{Mocking}: Strategies for mocking dependencies in tests to isolate and verify the behavior of individual components.
+    \item \textbf{Logging}: Consistent implementation of logging for debugging and monitoring purposes;
 \end{itemize}

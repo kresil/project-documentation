@@ -1,8 +1,8 @@
 \chapter*{Abstract}\label{ch:abstract}
 
 % introduction:
-This project addresses a critical need in the Kotlin Multiplatform ecosystem,
-by developing a dedicated fault-tolerance library.
+This document addresses a need in the Kotlin Multiplatform ecosystem,
+by developing a fault-tolerance library.
 Kotlin Multiplatform is a technology that enables developers to share code across multiple platforms, promoting code reuse and maintainability.
 
 % goal:
@@ -12,23 +12,20 @@ offering essential resilience mechanisms (e.g., Retry, Circuit Breaker, Rate Lim
 These mechanisms, alone or combined, prevent or mitigate the inevitable failures that occur in distributed systems,
 which impact the availability and reliability of services.
 Furthermore, the project aims to integrate these mechanisms into Ktor,
-the only Kotlin Multiplatform framework for building asynchronous server and client services.
+a Kotlin Multiplatform framework for building asynchronous server and client services.
 
 % methodology:
 The project began with a review of existing solutions in various platforms and languages to identify common patterns and practices, as well as differences and limitations.
 With this knowledge,
-a model was designed to represent the common interface for all implemented resilience mechanisms by the library -
-the Mechanism Model.
+a model was designed to represent the common interface for all implemented resilience mechanisms by the library - the Mechanism Model.
 The project then explored each of the
-various (but not all) resilience mechanisms,
+various resilience mechanisms,
 detailing their functionality,
 the chosen design and implementation details, configuration capabilities, default values associated with each policy, and their integration into the Ktor framework as plugins.
 
 % conclusion:
-As the project is amidst development, future work includes
-expanding the library with additional resilience mechanisms
-and further improving its testing and documentation.
-This way providing developers with a comprehensive and reliable toolkit for building resilient distributed systems
-in Kotlin Multiplatform.
+This project successfully developed
+and deployed a dedicated Kotlin Multiplatform library that offers resilience mechanisms,
+and includes a Ktor integration to provide an immediate installation and configuration of these mechanisms in asynchronous server and client architectures.
 
 \textbf{Keywords:} Kotlin Multiplatform; library; fault-tolerance; resilience; distributed systems; Ktor framework

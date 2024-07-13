@@ -66,8 +66,8 @@ a maximum delay can be set
 to prevent potentially excessive delays caused by the growth of the delay duration with each retry attempt.
 
 Additionally,
-introducing a \textit{jitter} can help
-mitigate the \textit{thundering herd problem} by randomizing the calculated delay duration.
+introducing a \textit{jitter}~\cite{aws-exponential-backoff-jitter} can help
+mitigate the \textit{thundering herd problem}~\cite{thundering-herd-problem} by randomizing the calculated delay duration.
 This randomization prevents multiple clients from synchronizing their retries of the same operation,
 thereby spreading out the retries over a period of time.
 
@@ -79,8 +79,8 @@ thereby spreading out the retries over a period of time.
 A custom delay provider can be used
 to implement a custom delay strategy that differs from the standard delay strategies.
 
-A delay strategy determines the next wait time between retry attempts,
-while a delay provider executes the actual waiting period by pausing or blocking the process
+A \textit{delay strategy} determines the next wait time between retry attempts,
+while a \textit{delay provider} executes the actual waiting period by pausing or blocking the process
 (dependends on the implementation) for the specified duration.
 
 For example, for testing purposes, the custom delay provider might be implemented to not delay using real time,
@@ -95,20 +95,18 @@ which can't be achieved with the standard delay strategies.
 
 \subsection{Ignoring Exceptions}\label{subsec:retry-ignoring-exceptions}
 
-The idea of ignoring exceptions that shouldn't trigger a retry was initially considered,
-by adding an extra configuration property (as offered by Resilience4j~\cite{resilience4j-retry}).
-However, it was decided
-that the retry predicate should be the only policy
+The idea of ignoring exceptions that shouldn’t trigger a retry was initially considered,
+by adding an extra configuration property (as offered by the Resilience4j library~\cite{resilience4j-retry}).
+However,
+it was decided
+that the \textit{retry-on-error} should be the only policy
 for determining if an operation should be retried based on the caught exception.
-
-The same idea was applied to the result predicate,
-which determines if the operation should be retried based on the result of the operation.
+The same principle was applied to the \textit{retry-on-result} policy, which determines if the operation should be retried based on the result of the operation.
 
 \subsection{Result Mapper}\label{subsec:retry-result-mapper}
 
 During the initial development phases, if an operation failed after multiple retries,
-the last caught exception was always rethrown,
-and the original result was returned without any modifications.
+the last caught exception was always rethrown or if successful, the result was returned as is.
 This approach is sufficient for most use cases,
 and the studied implementations of the Retry mechanism follow this pattern, but
 it was decided to provide a more flexible solution
@@ -121,8 +119,9 @@ but still did not provide a way to modify the result of the underlying operation
 To provide even more flexibility, a result mapper was introduced.
 This mapper enables customized handling of the result or exception once the Retry mechanism could not be used any more,
 allowing for more complex scenarios to be managed while keeping the already established functionality intact.
-Additionally, the result mapper can be reconfigured per decoration or, if ommited,
-the configured exception handler is used to handle exceptions while the result is returned as is.
+Additionally, the result mapper can be configured independently for each decoration.
+If omitted, the exception handler specified in the Retry mechanism configuration is used to manage exceptions,
+while the original result is returned unmodified.
 
 \subsection{Retry Context}\label{subsec:retry-context}
 
@@ -134,7 +133,7 @@ and has access to the configuration settings defined for the Retry mechanism.
 Additionally, it emits events to potential listeners.
 
 In the later stages of development,
-the retry context was made available to the operation being retried (see Section~\ref{subsec:operation-context}),
+the retry context was made available to the operation being retried (see Section~\ref{subsubsec:operation-context}),
 allowing it to access the context and potentially alter its behaviour based on an immutable version of its state.
 
 \subsubsection{Event Emission}\label{subsubsec:retry-context-event-emission}
@@ -162,9 +161,9 @@ But if the retry context determines that the operation should not be retried,
 the operation is considered to have failed.
 
 If the operation eventually succeeds through the Retry mechanism, the retry is considered successful.
-In all cases where the it cannot be used any more
+In all cases where it cannot be used any more
 (e.g., the maximum number of attempts has been reached),
-the result mapper is called to map the final result or exception before it is returned to the caller.
+the result mapper is called to map the final result before it is returned to the caller.
 
 This description can be seen in the Retry mechanism execution flow diagram,
 as illustrated in Figure~\ref{fig:retry-execution-flow}.
@@ -221,8 +220,10 @@ applying configurable retry logic based on conditions such as response status or
 
 Before retrying a request,
 the plugin copies the original request and propagates its completion state to the copy,
-ensuring completion synchronization between the original and the retry request
-(e.g., if the original request is cancelled, the retry request is also cancelled).
+ensuring completion synchronization between the original and the retry request.
+This ensures that if the original request is cancelled or encounters an error,
+the retry attempt is promptly cancelled or handled accordingly, leveraging structured concurrency principles.
+It helps maintain consistency and reliability in handling retries, particularly in scenarios involving intermittent network issues or server errors.
 
 The plugin allows for two levels of configuration:
 
@@ -238,6 +239,7 @@ which cancels its subscription when the request is completed.
 
 The Retry Ktor plugin can be configured by using a dedicated configuration builder with the properties listed in
 Table~\ref{tab:retry-ktor-config-builder}.
+For context, a predicate is a function that returns a boolean value based on the input parameters.
 
 \begin{table}[!htb]
     \centering
@@ -266,7 +268,9 @@ Table~\ref{tab:retry-ktor-config-builder}.
 Additionally, methods relevant to an HTTP context were added to the configuration builder to simplify the configuration process:
 
 \begin{itemize}
-    \item \texttt{retryOnServerErrors}: Retries the HTTP call if the response status code is in the range: 500-599;
+    \item \texttt{retryOnServerErrors}: Retries the HTTP call if the response status code is in the range: 500-599.
+    Based on \texttt{retryOnCallPredicate};
     \item \texttt{retryOnServerErrorsIfIdempotent}: Similar to \texttt{retryOnServerErrors}, but only retries if the request method is idempotent~\cite{idempotent-http-method} (e.g., \texttt{GET, PUT, DELETE});
-    \item \texttt{retryOnTimeout}: Retries the HTTP call if the exception thrown is a timeout exception (e.g., connection timeout exceeded, request timeout exceeded).
+    \item \texttt{retryOnTimeout}: Retries the HTTP call if the exception thrown is a timeout exception
+    (e.g., connection timeout exceeded, request timeout exceeded). Based on \texttt{retryOnExceptionPredicate};
 \end{itemize}

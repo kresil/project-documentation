@@ -24,15 +24,15 @@ In such cases, it’s more efficient for the application to quickly acknowledge 
 
 \subsection{Relation to the Retry Mechanism}\label{subsec:cbreaker-relation-to-retry}
 
-The Circuit Breaker mechanism is related to the retry mechanism (see Chapter~\ref{ch:retry}), as both are used to handle faults that might occur when connecting to a remote service or resource.
+The Circuit Breaker mechanism is related to the Retry mechanism (see Chapter~\ref{ch:retry}), as both are used to handle faults that might occur when connecting to a remote service or resource.
 However, the two mechanisms are used in different situations.
-The retry mechanism is used to retry an operation in the expectation that it'll succeed, while the Circuit Breaker mechanism is used to prevent an application from performing an operation that is likely to fail~\cite{microsoft-cbreaker-pattern}.
+The Retry mechanism is used to retry an operation in the expectation that it'll succeed, while the Circuit Breaker mechanism is used to prevent an application from performing an operation that is likely to fail~\cite{microsoft-cbreaker-pattern}.
 
-An application can combine these two mechanisms by using the retry mechanism to invoke an operation through a Circuit Breaker.
+An application can combine these two mechanisms by using the Retry mechanism to invoke an operation through a Circuit Breaker.
 However,
 the retry logic should be sensitive to any failures returned by the Circuit Breaker
 and abandon retry attempts
-if the it indicates that a failure is not transient~\cite{microsoft-cbreaker-pattern}.
+if it indicates that a failure is not transient~\cite{microsoft-cbreaker-pattern}.
 
 \subsection{State Machine}\label{subsec:cbreaker-state-machine}
 
@@ -50,7 +50,7 @@ as illustrated in Figure~\ref{fig:circuit-breaker-state-machine}, with the follo
     (i.e., success or failure).
     If a configurable failure threshold is reached, the circuit transitions to the open state;
     \item \textbf{Open} - The circuit does not allow the operation to be executed.
-    Instead, a predefined failure message is returned.
+    Instead, a predefined failure result is returned.
     The circuit remains open for a configurable period of time, after which it transitions to the Half-open state.
     This timer is used to allow the system to recover from the fault condition;
     \item \textbf{Half-Open} - The circuit allows a limited number of requests to execute the operation.
@@ -83,8 +83,8 @@ Other implementations might have additional states (e.g., for maintenance, testi
 \subsection{Operation Execution}\label{subsec:cbreaker-operation-execution}
 
 An operation protected by a Circuit Breaker is executed through the Circuit Breaker.
-When the operation is invoked, the Circuit Breaker checks its state to determine if the operation should be executed,
-as illustrated in Figure~\ref{fig:cbreaker-decoration}.
+When the operation is invoked, the Circuit Breaker checks its state to determine if the operation should be executed.
+The same Circuit Breaker instance can be used to protect multiple operations, sharing the same state and configuration, as illustrated in Figure~\ref{fig:cbreaker-decoration}.
 
 \begin{figure}[!htb]
     \centering
@@ -95,7 +95,6 @@ as illustrated in Figure~\ref{fig:cbreaker-decoration}.
 
 Regarding the underlying operation execution,
 it's important to note that the Circuit Breaker does not synchronize the received calls (i.e., it does not prevent multiple threads from invoking the operation concurrently when the circuit is in a state that allows the operation to be executed).
-
 To restrict the number of concurrent calls to the operation, the Bulkhead~\cite{microsoft-bulkhead-pattern} mechanism should be used in combination with the Circuit Breaker.
 
 \subsection{Recording Execution Results}\label{subsec:cbreaker-recording-execution-results}
@@ -119,7 +118,7 @@ making decisions based on recent performance rather than solely relying on histo
 (which might not be relevant in some cases).
 
 As newer results are recorded, older results are removed from the window, keeping a
-LIFO (Last In, First Out) order.
+FIFO (First In, First Out) order.
 This approach ensures that the window size remains constant and that the Circuit Breaker can make decisions based on the most recent data.
 
 
@@ -128,8 +127,11 @@ This approach ensures that the window size remains constant and that the Circuit
 The Circuit Breaker mechanism was implemented with the following components:
 
 \begin{itemize}
-    \item \textbf{State Reducer} - Manages the Circuit Breaker state transitions inside mutual exclusion;
-    \item \textbf{Sliding Window} - Records the operation's execution results;
+    \item \textbf{State}: Manages the Circuit Breaker state transitions and mutual exclusion;
+    \begin{itemize}
+        \item \textbf{Reducer} - Processes actions and updates the state accordingly;
+        \item \textbf{Sliding Window} - Records the operation's execution results;
+    \end{itemize}
     \item \textbf{Circuit Breaker} - Consults the state, executes operations and dispatches actions to the state reducer.
 \end{itemize}
 
@@ -148,7 +150,7 @@ where the Circuit Breaker receives two orderly requests to execute an operation 
     Since the failure rate equals the threshold, the Circuit Breaker transitions to the \texttt{Open} state.
     \item Client-B requests the operation to be executed through the Circuit Breaker.
     \item The Circuit Breaker checks the shared state, in mutual exclusion, and sees that it is \texttt{Open}, thus preventing the operation from being executed.
-    \item Client-B receives a predefined failure message.
+    \item Client-B receives a predefined failure result.
 \end{boldenumerate}
 
 \begin{figure}[!htb]
@@ -192,7 +194,7 @@ As illustrated in Figure~\ref{fig:reducer-pattern}, the reducer pattern has the 
 
 \subsection{Sliding Window}\label{subsec:cbreaker-sliding-window}
 
-The sliding window is used to record the operation's execution results and calculate the failure rate.
+The sliding window, which is part of the Circuit Breaker's state, is used to record the operation's execution results and calculate the failure rate.
 It is implemented as a circular/ring buffer.
 
 A circular buffer is a fixed-size buffer with a pointer to indicate the next empty position, incrementing with each new entry.
@@ -223,6 +225,7 @@ Instead,
 a comparable time marker was used to store the exact time when the Circuit Breaker transitioned to the \texttt{Open} state.
 This marker is consulted when callers send external events to the reducer component,
 behaving as an internal event.
+Even on state observations, the reducer component receives an event with the current time to determine if a transition is needed.
 If the delay has passed, the Circuit Breaker transitions, automatically, to the \texttt{HalfOpen} state,
 before attending any external events and potentially ignoring them.
 
@@ -244,6 +247,26 @@ a transition from the \texttt{HalfOpen} state to the \texttt{Open} state will ad
 A reset, however, places the Circuit Breaker in the \texttt{Closed} state,
 clearing the sliding window and resetting the failure rate.
 Effectively resetting the Circuit Breaker to its initial state.
+
+\subsection{Retry after Rejected}\label{subsec:cbreaker-retry-after-rejected}
+
+In some use cases, when a call is rejected by the Circuit Breaker,
+it might be useful to provide the caller with information on when the operation can be retried.
+In this scenario, the Circuit Breaker can return a recommended minimum
+duration for the caller to wait before retrying the operation.
+This duration is equivalent to the time
+remaining for the Circuit Breaker to transition to the \texttt{HalfOpen} state from the \texttt{Open} state.
+However, a call can be rejected by the Circuit Breaker for other reasons,
+such as the permitted number of calls in the \texttt{HalfOpen} state being exceeded.
+In this case, the Circuit Breaker can provide a retry-after period equivalent to the total duration of the \texttt{Open} state to give the system enough time to stabilize before the next retry attempt.
+
+With this information,
+an (outer) Retry mechanism can be configured in the pipeline before the
+(inner) Circuit Breaker mechanism.
+When the Circuit Breaker rejects a call,
+the Retry mechanism uses the provided retry-after period to delay the next retry attempt.
+Note that this behaviour, as mentioned in Section~\ref{subsec:cbreaker-relation-to-retry}, can only be possible
+if the Retry mechanism is sensitive to the Circuit Breaker's rejection response.
 
 \subsection{Event Emission}\label{subsec:cbreaker-event-emission}
 
@@ -343,5 +366,12 @@ by using a dedicated configuration builder with the properties listed in Table~\
 Additionally, methods relevant to an HTTP context were added to the configuration builder to simplify the configuration process:
 
 \begin{itemize}
-    \item \texttt{recordFailureOnServerErrors}: Records server responses with status codes in the range 500-599 as failures.
+    \item \texttt{recordFailureOnServerErrors}:
+    Records server responses with status codes in the range 500-599 as failures.
+    Based on \texttt{recordResponseAsFailurePredicate};
 \end{itemize}
+
+Another feature thought to be useful was the ability
+to modify the response when a call is rejected by the Circuit Breaker
+(e.g., to include a Retry-After header and status code 503).
+However, this feature was left as a future improvement due to time constraints.
